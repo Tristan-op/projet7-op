@@ -1,0 +1,15 @@
+# Ignore les dossiers de données et modèles
+data/
+models/
+mlruns/
+
+# Ignore les fichiers de configuration de l'environnement
+.env
+.DS_Store
+
+# Ignore les fichiers de sortie
+*.log
+*.csv
+*.h5
+__pycache__/
+*.pyc
