@@ -1,6 +1,5 @@
 # Ignore les dossiers de données et modèles
 data/
-models/
 mlruns/
 
 
