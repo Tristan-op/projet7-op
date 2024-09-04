@@ -1,3 +1,7 @@
+# Utilities for building and installing packages
+setuptools==65.5.0
+wheel==0.40.0
+
 # Libraries for FastText, TensorFlow, and model training
 tensorflow==2.16.1  # TensorFlow compatible with Python 3.12
 transformers==4.24.0
