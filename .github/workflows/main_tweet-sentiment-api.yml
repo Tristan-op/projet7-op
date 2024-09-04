@@ -1,8 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
-
-name: tweet-sentiment-api
+name: Deploy sentiment API to Azure
 
 on:
   push:
@@ -10,30 +6,41 @@ on:
       - main
 
 jobs:
-  build-deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout the repository
-      uses: actions/checkout@v2
+    # 1. Vérification du dépôt
+    - name: Checkout repository content
+      uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
+    # 2. Login à Azure avec le secret d'authentification
+    - name: 'Login via Azure CLI'
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    # 3. Setup Python
+    - name: Setup Python 3.8
+      uses: actions/setup-python@v4
       with:
         python-version: '3.8'
 
+    # 4. Mettre à jour pip et installer les dépendances à partir de requirements.txt
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Run unit tests
-      run: |
-        pytest  # Si vous avez des tests unitaires, sinon commentez cette ligne
+    # 5. Run pytest si vous avez des tests unitaires (à commenter sinon)
+    #- name: Run tests
+     # run: |
+      #  pytest
 
-    - name: Deploy to Azure Web App
+    # 6. Déploiement de l'application sur Azure App Service
+    - name: 'Deploy to Azure WebApp'
       uses: azure/webapps-deploy@v2
       with:
-        app-name: 'tweet-sentiment-api'  # Remplacez par le nom de votre application Azure
+        app-name: 'tweet-sentiment-api' # Changez cela par le nom de votre App Service
         slot-name: 'production'
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}  # Assurez-vous d'avoir configuré votre secret dans GitHub Actions
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
