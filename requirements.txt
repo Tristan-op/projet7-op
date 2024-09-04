@@ -1,5 +1,5 @@
 # Libraries for FastText, TensorFlow, and model training
-tensorflow==2.13.1  # TensorFlow compatible with Python 3.12
+tensorflow==2.16  # TensorFlow compatible with Python 3.12
 transformers==4.24.0
 gensim==4.3.0  # Updated to be compatible with Python 3.12
 scikit-learn==1.2.2  # Compatible with Python 3.12
