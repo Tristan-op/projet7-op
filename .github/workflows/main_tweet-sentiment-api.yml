@@ -21,10 +21,10 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     # 3. Setup Python
-    - name: Setup Python 3.8
+    - name: Setup Python 3.12.2
       uses: actions/setup-python@v4
       with:
-        python-version: '3.8'
+        python-version: '3.12.2'
 
     # 4. Mettre à jour pip et installer les dépendances à partir de requirements.txt
     - name: Install dependencies
