@@ -3,6 +3,7 @@ import zipfile
 import fasttext.util
 import nltk
 from flask import Flask, render_template, redirect, url_for
+import tensorflow as tf
 
 nltk.download('wordnet')
 from nltk.stem import WordNetLemmatizer
@@ -29,6 +30,13 @@ with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
 
 # Charger le modèle .h5 décompressé
 model_path = os.path.join(extract_dir, 'LSTM_plus_Lemmatization_plus_FastText_model.h5')
+
+# Gestion des erreurs lors du chargement du modèle
+try:
+    lstm_model = tf.keras.models.load_model(model_path)
+    print("Modèle LSTM chargé avec succès.")
+except Exception as e:
+    print(f"Erreur lors du chargement du modèle LSTM : {e}")
 
 # Route d'accueil pour l'API avec message d'avertissement
 @app.route("/", methods=["GET"])
