@@ -1,5 +1,5 @@
 # Core libraries for TensorFlow, FastText, and model training
-tensorflow==2.11.0  # Compatible avec Python 3.8
+tensorflow==2.9.0  # Compatible avec Python 3.8
 transformers==4.24.0
 gensim==4.1.2
 scikit-learn==0.24.2
