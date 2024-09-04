@@ -2,7 +2,7 @@
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 # More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
 
-name: Deploy Tweet Sentiment API
+name: tweet-sentiment-api
 
 on:
   push:
@@ -10,11 +10,11 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  build-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout the repository
       uses: actions/checkout@v2
 
     - name: Set up Python
@@ -22,28 +22,18 @@ jobs:
       with:
         python-version: '3.8'
 
-    - name: Install system dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential cmake
-
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Run tests (if any)
+    - name: Run unit tests
       run: |
-        # Si vous avez des tests, exécutez-les ici. Vous pouvez aussi les ignorer si ce n'est pas pertinent pour l'instant.
-        echo "No tests found, proceeding to deployment."
+        pytest  # Si vous avez des tests unitaires, sinon commentez cette ligne
 
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
-        app-name: "tweet-sentiment-api"
-        slot-name: "production"
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile }}
-
-    - name: Upload models (optional step)
-      run: |
-        echo "Models uploaded"
+        app-name: 'tweet-sentiment-api'  # Remplacez par le nom de votre application Azure
+        slot-name: 'production'
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}  # Assurez-vous d'avoir configuré votre secret dans GitHub Actions
