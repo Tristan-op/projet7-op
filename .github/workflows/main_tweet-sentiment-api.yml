@@ -3,7 +3,7 @@ name: Deploy Sentiment Analysis API
 on:
   push:
     branches:
-      - main  # ou la branche de votre choix
+      - main
 
 jobs:
   build-deploy:
@@ -18,9 +18,13 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Install dependencies
+    - name: Upgrade setuptools, pip, and wheel
       run: |
         python -m pip install --upgrade pip
+        pip install --upgrade setuptools wheel
+
+    - name: Install dependencies
+      run: |
         pip install -r requirements.txt
 
     - name: Azure Login
