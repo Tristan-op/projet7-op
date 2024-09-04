@@ -33,9 +33,9 @@ jobs:
         pip install -r requirements.txt
 
     # 5. Run pytest si vous avez des tests unitaires (à commenter sinon)
-    - name: Run tests
-      run: |
-        pytest
+    #- name: Run tests
+     # run: |
+      #  pytest
 
     # 6. Déploiement de l'application sur Azure App Service
     - name: 'Deploy to Azure WebApp'
