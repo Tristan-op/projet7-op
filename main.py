@@ -14,6 +14,7 @@ from nltk.stem import WordNetLemmatizer
 lemmatizer = WordNetLemmatizer()
 print("Chargement du modèle FastText...")
 
+model_path = './models/cc.en.300.bin'
 # Vérifier si le modèle existe déjà, sinon le télécharger
 if not os.path.exists(model_path):
     print("Téléchargement du modèle FastText...")
@@ -80,7 +81,7 @@ def submit_tweet():
     processed_tweet = lemmatizer.lemmatize(tweet)
 
     # Utiliser le modèle FastText pour vectoriser le tweet
-    tweet_vector = ft_model.get_sentence_vector(processed_tweet)
+    tweet_vector = model.get_sentence_vector(processed_tweet)
 
     # Faire une prédiction avec le modèle LSTM
     prediction = lstm_model.predict([tweet_vector])
