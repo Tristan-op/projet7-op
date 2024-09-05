@@ -92,7 +92,7 @@ def submit_tweet():
         'Prédiction': predicted_sentiment
     }
 
-    # Sauvegarder le tweet dans le fichier CSV
+    # Sauvegarder le tweet dans le fichier CSV 
     save_tweet_to_csv(tweet_data)
 
     # Message à retourner à l'utilisateur
