@@ -6,9 +6,8 @@ on:
       - main
 
 jobs:
-  build:
+  setup:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -16,15 +15,32 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'  # Assurez-vous que la version est 3.8
+          python-version: '3.8'
 
+  install-dependencies:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install --force-reinstall -r requirements.txt
 
+  download-model:
+    needs: install-dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download FastText model
+        run: |
+          mkdir -p models
+          wget -P models https://dl.fbaipublicfiles.com/fasttext/vectors-wiki/wiki-news-300d-1M-subword.bin
+
+  deploy:
+    needs: download-model
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'tweet-api'
+          app-name: 'tweet-sentiment-api'
           publish-profile: ${{ secrets.AZURE_API }}
