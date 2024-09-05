@@ -1,33 +1,24 @@
-name: Deploy Python App to Azure Web App
-
-on:
-  push:
-    branches:
-      - main
-
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # Étape 1 : Checkout du code source
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Étape 2 : Installer Python et pip
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.8'
 
-      - name: Create virtual environment
-        run: python -m venv venv  # Créer un environnement virtuel
-      
-      - name: Activate virtual environment and upgrade pip
+      - name: Create and activate virtual environment
         run: |
-          source venv/bin/activate  # Activer l'environnement virtuel
-          pip install --upgrade pip  # Mettre à jour pip
-          pip install -r requirements.txt  # Installer les dépendances à partir du fichier requirements.txt
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip freeze  # Afficher les dépendances installées pour vérification
+
          
       
       # Étape 4 : Télécharger et décompresser le modèle LSTM depuis GitHub
