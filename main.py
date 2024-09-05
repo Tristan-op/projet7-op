@@ -1,6 +1,5 @@
 import os
 import zipfile
-import fasttext.util
 import nltk
 import tensorflow as tf
 import csv
