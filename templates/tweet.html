@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soumettre un Tweet</title>
+</head>
+<body>
+    <h1>Soumettre votre tweet</h1>
+    
+    <form action="/submit_tweet" method="POST">
+        <!-- Champ pour le nom -->
+        <label for="name">Votre nom :</label>
+        <input type="text" id="name" name="name" required><br><br>
+        
+        <!-- Champ pour le tweet -->
+        <label for="tweet">Votre tweet :</label><br>
+        <textarea id="tweet" name="tweet" rows="4" cols="50" required></textarea><br><br>
+        
+        <!-- Boutons pour sélectionner le sentiment -->
+        <label>Sentiment du tweet :</label><br>
+        <input type="radio" id="positif" name="sentiment" value="positif" required>
+        <label for="positif">Positif</label><br>
+        <input type="radio" id="negatif" name="sentiment" value="negatif" required>
+        <label for="negatif">Négatif</label><br><br>
+
+        <!-- Bouton pour soumettre -->
+        <button type="submit">Envoyer</button>
+    </form>
+</body>
+</html>
