@@ -20,13 +20,15 @@ jobs:
         with:
           python-version: '3.8'
 
-      # Étape 3 : Installer les dépendances du projet
-      - name: Install dependencies
+  - name: Create virtual environment
+        run: python -m venv venv  # Créer un environnement virtuel
+      
+      - name: Activate virtual environment and upgrade pip
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install nltk  # Ajoutez cette ligne
-          python -c "import nltk; nltk.download('wordnet')"
+          source venv/bin/activate  # Activer l'environnement virtuel
+          pip install --upgrade pip  # Mettre à jour pip
+          pip install -r requirements.txt  # Installer les dépendances à partir du fichier requirements.txt
+         
       
       # Étape 4 : Télécharger et décompresser le modèle LSTM depuis GitHub
       - name: Download LSTM model from GitHub
