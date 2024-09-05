@@ -1,30 +1,38 @@
+name: Deploy Python App to Azure Web App
+
+on:
+  push:
+    branches:
+      - main
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+      # Étape 1 : Checkout du code source
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # Étape 2 : Installer Python et pip
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.8'
 
+      # Étape 3 : Créer un environnement virtuel et activer
       - name: Create and activate virtual environment
         run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          pip freeze  # Afficher les dépendances installées pour vérification
+          python -m venv venv  # Créer l'environnement virtuel
+          source venv/bin/activate  # Activer l'environnement virtuel
+          pip install --upgrade pip  # Mettre à jour pip
+          pip install -r requirements.txt  # Installer les dépendances à partir du fichier requirements.txt
+          pip freeze  # Vérification des paquets installés
 
-         
-      
       # Étape 4 : Télécharger et décompresser le modèle LSTM depuis GitHub
       - name: Download LSTM model from GitHub
         run: |
-          wget  https://github.com/Tristan-op/projet7-op/releases/download/Projet-7/LSTM_plus_Lemmatization_plus_FastText_model.zip -O ./models/LSTM_model.zip
+          wget https://github.com/Tristan-op/projet7-op/releases/download/Projet-7/LSTM_plus_Lemmatization_plus_FastText_model.zip -O ./models/LSTM_model.zip
           unzip ./models/LSTM_model.zip -d ./models/temp_model
 
       # Étape 5 : Télécharger le modèle FastText si nécessaire
@@ -34,7 +42,7 @@ jobs:
             wget -P ./models/ https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz
             gzip -d ./models/cc.en.300.bin.gz
           fi
-      
+
       # Étape 6 : Déployer l'application sur Azure Web App
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
