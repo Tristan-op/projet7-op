@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: '3.8'
 
-  - name: Create virtual environment
+      - name: Create virtual environment
         run: python -m venv venv  # Créer un environnement virtuel
       
       - name: Activate virtual environment and upgrade pip
