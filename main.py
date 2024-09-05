@@ -1,6 +1,5 @@
 import os
 import zipfile
-import tensorflow as tf
 import csv
 from flask import Flask, render_template, request, jsonify
 from datetime import datetime
