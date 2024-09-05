@@ -1,19 +1,11 @@
 import os
 import zipfile
-import nltk
-nltk.download('wordnet')
-
 import tensorflow as tf
 import csv
 from flask import Flask, render_template, request, jsonify
 from datetime import datetime
 
-nltk.download('wordnet')
-from nltk.stem import WordNetLemmatizer
 
-# Initialiser le lemmatizer et le modèle FastText
-lemmatizer = WordNetLemmatizer()
-print("Chargement du modèle FastText...")
 
 # Chemin vers le modèle FastText
 model_path = './models/cc.en.300.bin'
