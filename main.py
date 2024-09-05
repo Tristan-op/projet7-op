@@ -13,7 +13,16 @@ from nltk.stem import WordNetLemmatizer
 # Initialiser le lemmatizer et le modèle FastText
 lemmatizer = WordNetLemmatizer()
 print("Chargement du modèle FastText...")
-ft_model = fasttext.load_model('fasttext-wiki-news-subwords-300')
+
+# Vérifier si le modèle existe déjà, sinon le télécharger
+if not os.path.exists(model_path):
+    print("Téléchargement du modèle FastText...")
+    os.system("wget -P ./models/ https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz")
+    os.system("gzip -d ./models/cc.en.300.bin.gz")  # Décompresse le fichier
+    print("Téléchargement terminé.")
+
+# Charger le modèle
+model = fasttext.load_model(model_path)
 
 # Décompression et chargement du modèle LSTM
 zip_file_path = './models/LSTM_plus_Lemmatization_plus_FastText_model.zip'
@@ -92,7 +101,7 @@ def submit_tweet():
         'Prédiction': predicted_sentiment
     }
 
-    # Sauvegarder le tweet dans le fichier CSV
+    # Sauvegarder le tweet dans le fichier CSV 
     save_tweet_to_csv(tweet_data)
 
     # Message à retourner à l'utilisateur
