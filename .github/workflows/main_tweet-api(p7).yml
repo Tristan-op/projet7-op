@@ -29,7 +29,7 @@ jobs:
       # Étape 4 : Télécharger et décompresser le modèle LSTM depuis GitHub
       - name: Download LSTM model from GitHub
         run: |
-          wget https://github.com/Tristan-op/projet7-op/releases/tag/Projet-7/LSTM_plus_Lemmatization_plus_FastText_model.zip -O ./models/LSTM_model.zip
+          wget  https://github.com/Tristan-op/projet7-op/releases/download/Projet-7/LSTM_plus_Lemmatization_plus_FastText_model.zip -O ./models/LSTM_model.zip
           unzip ./models/LSTM_model.zip -d ./models/temp_model
 
       # Étape 5 : Télécharger le modèle FastText si nécessaire
