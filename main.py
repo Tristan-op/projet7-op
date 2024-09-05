@@ -1,6 +1,6 @@
 import os
 import zipfile
-import nltk
+from nltk.stem import WordNetLemmatizer
 import tensorflow as tf
 import csv
 from flask import Flask, render_template, request, jsonify
@@ -13,28 +13,37 @@ from nltk.stem import WordNetLemmatizer
 lemmatizer = WordNetLemmatizer()
 print("Chargement du modèle FastText...")
 
+# Chemin vers le modèle FastText
 model_path = './models/cc.en.300.bin'
-# Vérifier si le modèle existe déjà, sinon le télécharger
+
+# Vérifier si le modèle existe, sinon le télécharger
 if not os.path.exists(model_path):
     print("Téléchargement du modèle FastText...")
     os.system("wget -P ./models/ https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz")
     os.system("gzip -d ./models/cc.en.300.bin.gz")  # Décompresse le fichier
     print("Téléchargement terminé.")
 
-# Charger le modèle
+# Charger le modèle FastText
 model = fasttext.load_model(model_path)
 
-# Décompression et chargement du modèle LSTM
+# Chemin du fichier .zip du modèle LSTM
 zip_file_path = './models/LSTM_plus_Lemmatization_plus_FastText_model.zip'
 extract_dir = './models/temp_model'
 
+# Décompression et chargement du modèle LSTM si nécessaire
 if not os.path.exists(extract_dir):
     os.makedirs(extract_dir)
 
 with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
     zip_ref.extractall(extract_dir)
 
+# Charger le modèle LSTM
 model_path = os.path.join(extract_dir, 'LSTM_plus_Lemmatization_plus_FastText_model.h5')
+try:
+    lstm_model = tf.keras.models.load_model(model_path)
+    print("Modèle LSTM chargé avec succès.")
+except Exception as e:
+    print(f"Erreur lors du chargement du modèle LSTM : {e}")
 
 # Gestion des erreurs de chargement du modèle
 try:
