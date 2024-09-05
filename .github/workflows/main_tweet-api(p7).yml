@@ -26,6 +26,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install nltk  # Ajoutez cette ligne
+          python -c "import nltk; nltk.download('wordnet')"
       
       # Étape 4 : Télécharger et décompresser le modèle LSTM depuis GitHub
       - name: Download LSTM model from GitHub
