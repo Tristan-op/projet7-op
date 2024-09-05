@@ -1,8 +1,15 @@
 import os
 import zipfile
+import tensorflow as tf
+import nltk  # NLTK pour la lemmatisation
+from nltk.stem import WordNetLemmatizer  # Importer la lemmatisation
 import csv
 from flask import Flask, render_template, request, jsonify
 from datetime import datetime
+import fasttext
+
+
+nltk.download('wordnet')  # Télécharger les ressources nécessaires
 
 
 
