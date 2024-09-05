@@ -1,6 +1,10 @@
 import os
 import zipfile
+
+os.system('pip install nltk==3.7')
 import tensorflow as tf
+
+os.system('pip install tensorflow==2.9.0')
 import nltk  # NLTK pour la lemmatisation
 from nltk.stem import WordNetLemmatizer  # Importer la lemmatisation
 import csv
