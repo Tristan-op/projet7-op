@@ -11,6 +11,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      
+      # Vérification de la présence de requirements.txt
+      - name: List files
+        run: ls -al
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -21,10 +25,11 @@ jobs:
     needs: setup
     runs-on: ubuntu-latest
     steps:
-      - name: Install dependencies
+      - name: Clear cache and install dependencies
         run: |
+          rm -rf ~/.cache/pip
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r path/to/requirements.txt
 
   download-model:
     needs: install-dependencies
@@ -43,4 +48,5 @@ jobs:
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'tweet-sentiment-api'
+          slot-name: 'p7'
           publish-profile: ${{ secrets.AZURE_API }}
