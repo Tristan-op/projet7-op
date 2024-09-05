@@ -22,13 +22,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
-  
-      - name: Download FastText model
-        run: |
-          mkdir -p models
-          wget -P models https://dl.fbaipublicfiles.com/fasttext/vectors-wiki/wiki-news-300d-1M-subword.bin
-
+          
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
