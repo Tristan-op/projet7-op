@@ -10,24 +10,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Étape 1 : Checkout du code source
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # Étape 2 : Installer Python et pip
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'  # Assurez-vous que la version est 3.8
+          python-version: '3.8'
 
+      # Étape 3 : Installer les dépendances du projet
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          
+      
+      # Étape 4 : Télécharger et décompresser le modèle LSTM depuis GitHub
+      - name: Download LSTM model from GitHub
+        run: |
+          wget https://github.com/Tristan-op/projet7-op/blob/main/models/LSTM_plus_Lemmatization_plus_FastText_model.zip -O ./models/LSTM_model.zip
+          unzip ./models/LSTM_model.zip -d ./models/temp_model
+
+      # Étape 5 : Télécharger le modèle FastText si nécessaire
+      - name: Setup FastText Model
+        run: |
+          if [ ! -f "./models/cc.en.300.bin" ]; then
+            wget -P ./models/ https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz
+            gzip -d ./models/cc.en.300.bin.gz
+          fi
+      
+      # Étape 6 : Déployer l'application sur Azure Web App
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'tweet-api'
-          slot-name: 'p7'
+          app-name: 'ton-app-azure'
           publish-profile: ${{ secrets.AZURE_API }}
-
-
