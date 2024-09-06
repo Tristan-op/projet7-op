@@ -1,9 +1,9 @@
 import re
-
-!pip install numpy
+import spacy
+import fasttext
 import numpy as np
 import pandas as pd
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from datetime import datetime
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import load_model
@@ -67,6 +67,16 @@ def predict_sentiment(text):
     padded_seq = pad_sequences(seq, maxlen=100)
     prediction = lstm_model.predict(padded_seq)
     return np.argmax(prediction)  # 0 pour négatif, 1 pour positif
+
+# Route pour la page Welcome
+@app.route('/')
+def welcome():
+    return render_template('welcome.html')
+
+# Route pour la page Chat
+@app.route('/chat')
+def chat():
+    return render_template('chat.html')
 
 # Endpoint pour envoyer un message
 @app.route('/send-message', methods=['POST'])
