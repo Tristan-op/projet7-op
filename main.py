@@ -1,15 +1,8 @@
-import subprocess
-
-# Afficher la liste des packages installés au début de l'exécution
-def list_installed_packages():
-    print("Liste des packages installés :")
-    subprocess.run(["pip", "list"])
-
-import re
-import spacy
-import fasttext
-import numpy as np
-import pandas as pd
+# Importations nécessaires pour le reste de l'application
+from spacy import *
+from fasttext import *
+from numpy import *
+from pandas import *
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime
 from tensorflow.keras.preprocessing.sequence import pad_sequences
@@ -17,8 +10,8 @@ from tensorflow.keras.models import load_model
 import os
 import zipfile
 
-# Charger le modèle spaCy pour la lemmatisation
-nlp = spacy.load('fr_core_news_md')
+# Charger le modèle spaCy pour l'anglais
+nlp = spacy.load('en_core_web_md')
 
 # Charger le modèle FastText
 fasttext_model = fasttext.load_model('./models/cc.fr.300.bin')
