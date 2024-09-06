@@ -47,8 +47,9 @@ jobs:
     - name: Download LSTM model
       run: |
         source .venv/bin/activate  # Activer l'environnement virtuel
-        wget -P ./modèle https://your-storage-server.com/models/sentiment_lstm_model.zip
-        unzip ./modèle/sentiment_lstm_model.zip -d ./modèle
+        wget https://github.com/Tristan-op/projet7-op/releases/download/Projet-7/LSTM_plus_Lemmatization_plus_FastText_model.zip -O ./models/LSTM_plus_Lemmatization_plus_FastText_model.zip
+        unzip ./models/LSTM_plus_Lemmatization_plus_FastText_model.zip -d ./models/
+
 
     - name: Run API
       run: |
