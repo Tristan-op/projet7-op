@@ -20,7 +20,7 @@ if os.path.exists(zip_path):
 
 # Charger le modèle LSTM directement avec Keras après décompression
 if os.path.exists(model_path):
-    lstm_model = load_model(model_path)  # Charger directement avec Keras
+    lstm_model = load_model(model_path, compile=False)  # Charger directement avec Keras
 else:
     raise FileNotFoundError(f"Le modèle n'a pas été trouvé à l'emplacement : {model_path}")
 
