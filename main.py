@@ -109,4 +109,4 @@ def chat_history():
     return jsonify({'messages': messages})
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT"))
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT")))
