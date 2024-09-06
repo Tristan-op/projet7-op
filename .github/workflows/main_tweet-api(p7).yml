@@ -50,12 +50,6 @@ jobs:
         wget -P ./modèle https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.fr.300.bin.gz
         gunzip ./modèle/cc.fr.300.bin.gz
 
-    - name: Download LSTM model
-      run: |
-        source .venv/bin/activate  # Activer l'environnement virtuel
-        wget https://github.com/Tristan-op/projet7-op/releases/download/Projet-7/LSTM_plus_Lemmatization_plus_FastText_model.zip -O ./models/LSTM_plus_Lemmatization_plus_FastText_model.zip
-        unzip ./models/LSTM_plus_Lemmatization_plus_FastText_model.zip -d ./models/
-
 
     - name: Run API
       run: |
