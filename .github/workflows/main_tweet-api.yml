@@ -51,7 +51,8 @@ jobs:
         gunzip ./modèle/cc.fr.300.bin.gz
 
 
-    - name: Run API
-      run: |
-        source .venv/bin/activate  # Activer l'environnement virtuel
-        python main.py
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'tweet-api'  # Nom de ton application Azure Web App
+        publish-profile: ${{ secrets.AZURE_API }}  # Le secret contenant le profil de publication
