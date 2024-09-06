@@ -1,6 +1,6 @@
 import re
 
-
+pip install numpy
 import numpy as np
 import pandas as pd
 from flask import Flask, request, jsonify
