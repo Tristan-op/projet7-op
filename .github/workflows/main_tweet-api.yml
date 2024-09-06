@@ -1,7 +1,10 @@
-name: Deploy Python App to Azure Web App
+name: main_tweet_api
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
     branches:
       - main
 
@@ -10,24 +13,45 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'  # Assurez-vous que la version est 3.8
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: 'tweet-api'
-          slot-name: 'p7'
-          publish-profile: ${{ secrets.AZURE_API }}
+    # Créer et activer un environnement virtuel
+    - name: Create virtual environment
+      run: |
+        python -m venv .venv  # Créer un environnement virtuel appelé '.venv'
+        source .venv/bin/activate
+
+    - name: Install primary dependencies
+      run: |
+        source .venv/bin/activate  # Activer l'environnement virtuel
+        python -m pip install --upgrade pip
+        pip install --no-cache-dir -r requirements.txt
+        
+         # Installer FastText en dehors de `requirements.txt`
+    - name: Install FastText separately
+      run: |
+        source .venv/bin/activate  # Activer l'environnement virtuel
+        pip install fasttext==0.9.2  # Installation de FastText séparément
+
+    - name: List installed packages
+      run: |
+        source .venv/bin/activate  # Activer l'environnement virtuel
+        pip list  # Liste des packages pour vérifier si tout est bien installé
+
+    - name: Download FastText model
+      run: |
+        source .venv/bin/activate  # Activer l'environnement virtuel
+        wget -P ./modèle https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.fr.300.bin.gz
+        gunzip ./modèle/cc.fr.300.bin.gz
 
 
+    - name: Run API
+      run: |
+        source .venv/bin/activate  # Activer l'environnement virtuel
+        python main.py

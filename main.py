@@ -1,31 +1,32 @@
-import zipfile
 import os
+import zipfile
 import re
-import fasttext
+import mlflow.keras
 import numpy as np
 import pandas as pd
+import fasttext
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime
 from tensorflow.keras.models import load_model
 
-# Chemin du fichier zip et des fichiers décompressés
+# Charger le modèle FastText
+fasttext_model = fasttext.load_model('./modèle/cc.fr.300.bin')
+
+# Chemin du fichier zip et du modèle décompressé
 zip_path = './models/LSTM_plus_Lemmatization_plus_FastText_model.zip'
 extract_path = './models/unzipped_model/'
-model_path = './models/unzipped_model/LSTM_plus_Lemmatization_plus_FastText_model.h5'  # Chemin du modèle décompressé
+model_path = './models/unzipped_model/LSTM_plus_Lemmatization_plus_FastText_model.h5'
 
 # Décompression du modèle de machine learning (LSTM)
 if os.path.exists(zip_path):
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         zip_ref.extractall(extract_path)
 
-# Charger le modèle LSTM directement avec Keras après décompression
+# Charger le modèle LSTM après décompression
 if os.path.exists(model_path):
-    lstm_model = load_model(model_path, compile=False)  # Charger directement avec Keras
+    lstm_model = load_model(model_path, compile=False)
 else:
     raise FileNotFoundError(f"Le modèle n'a pas été trouvé à l'emplacement : {model_path}")
-
-# Charger le modèle FastText
-fasttext_model = fasttext.load_model('./modèle/cc.fr.300.bin')
 
 # Initialiser l'application Flask
 app = Flask(__name__)
@@ -43,14 +44,12 @@ def add_message_to_csv(username, message, sentiment):
     time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     new_data = {'username': username, 'message': message, 'sentiment': sentiment, 'time': time}
     df = pd.read_csv(CSV_FILE)
-    df = df.append(new_data, ignore_index=True)
+    df = pd.concat([df, pd.DataFrame([new_data])], ignore_index=True)
     df.to_csv(CSV_FILE, index=False)
 
 # Prétraiter le texte
 def preprocess_text(text):
-    # Convertir en minuscules
     text = text.lower()
-    # Supprimer les caractères spéciaux
     text = re.sub(r'\W', ' ', text)
     text = re.sub(r'\s+', ' ', text)
     return text
@@ -64,13 +63,10 @@ def text_to_fasttext_vector(text):
 # Fonction pour prédire le sentiment avec LSTM
 def predict_sentiment(text):
     cleaned_text = preprocess_text(text)
-    # Convertir le texte nettoyé en vecteurs FastText
     vectorized_text = text_to_fasttext_vector(cleaned_text)
-    # Redimensionner pour correspondre aux attentes du modèle
     vectorized_text = np.expand_dims(vectorized_text, axis=0)
-    # Faire la prédiction avec le modèle LSTM chargé
     prediction = lstm_model.predict(vectorized_text)
-    return np.argmax(prediction)  # 0 pour négatif, 1 pour positif
+    return np.argmax(prediction)
 
 # Route pour la page Welcome
 @app.route('/')
@@ -85,25 +81,20 @@ def chat():
 # Endpoint pour envoyer un message
 @app.route('/send-message', methods=['POST'])
 def send_message():
-    # Toujours "Bob" comme nom d'utilisateur
     username = "Bob"
     data = request.get_json()
     message = data['message']
-    user_sentiment = int(data['sentiment'])  # 0 pour négatif, 1 pour positif
+    user_sentiment = int(data['sentiment'])
 
-    # Prédire le sentiment avec le modèle
     predicted_sentiment = predict_sentiment(message)
 
-    # Ajouter le message dans le fichier CSV
     add_message_to_csv(username, message, user_sentiment)
 
-    # Comparer le sentiment prédit avec celui fourni par l'utilisateur
     if predicted_sentiment == user_sentiment:
         result_message = "Le sentiment a bien été prédit."
     else:
         result_message = "Le sentiment n'a pas été bien prédit."
 
-    # Retourner la réponse JSON
     return jsonify({
         'message': 'Message enregistré avec succès',
         'result': result_message,
