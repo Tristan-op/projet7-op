@@ -1,115 +1,60 @@
-import os
-import zipfile
-
-import csv
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request, jsonify
+import sqlite3
 from datetime import datetime
 
-
-
-
-# Chemin du fichier .zip du modèle LSTM
-zip_file_path = './models/LSTM_plus_Lemmatization_plus_FastText_model.zip'
-extract_dir = './models/temp_model'
-
-# Décompression et chargement du modèle LSTM si nécessaire
-if not os.path.exists(extract_dir):
-    os.makedirs(extract_dir)
-
-with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-    zip_ref.extractall(extract_dir)
-
-# Charger le modèle LSTM
-model_path = os.path.join(extract_dir, 'LSTM_plus_Lemmatization_plus_FastText_model.h5')
-try:
-    lstm_model = tf.keras.models.load_model(model_path)
-    print("Modèle LSTM chargé avec succès.")
-except Exception as e:
-    print(f"Erreur lors du chargement du modèle LSTM : {e}")
-
-# Gestion des erreurs de chargement du modèle
-try:
-    lstm_model = tf.keras.models.load_model(model_path)
-    print("Modèle LSTM chargé avec succès.")
-except Exception as e:
-    print(f"Erreur lors du chargement du modèle LSTM : {e}")
-
-# Initialiser l'application Flask
 app = Flask(__name__)
 
-# Fonction pour enregistrer les tweets dans un fichier CSV
-def save_tweet_to_csv(tweet_data):
-    file_exists = os.path.isfile('tweets.csv')
-    
-    with open('tweets.csv', mode='a', newline='', encoding='utf-8') as file:
-        fieldnames = ['ID', 'Nom Utilisateur', 'Heure', 'Tweet', 'Sentiment', 'Prédiction']
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
+# Création de la base de données
+def init_db():
+    with sqlite3.connect('chat.db') as conn:
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                message TEXT NOT NULL,
+                sentiment INTEGER NOT NULL,
+                time TEXT NOT NULL
+            )
+        ''')
+    print("Base de données initialisée.")
 
-        if not file_exists:
-            writer.writeheader()  # Écrire les en-têtes si le fichier est créé pour la première fois
+# Ajouter un message dans la base de données
+def add_message(username, message, sentiment):
+    with sqlite3.connect('chat.db') as conn:
+        cur = conn.cursor()
+        cur.execute('''
+            INSERT INTO messages (username, message, sentiment, time)
+            VALUES (?, ?, ?, ?)
+        ''', (username, message, sentiment, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        conn.commit()
 
-        writer.writerow(tweet_data)
+# Récupérer l'historique des messages
+def get_chat_history():
+    with sqlite3.connect('chat.db') as conn:
+        cur = conn.cursor()
+        cur.execute('SELECT username, message, sentiment, time FROM messages ORDER BY time DESC')
+        return cur.fetchall()
 
-# Route d'accueil pour l'API
-@app.route("/", methods=["GET"])
-def home():
-    return render_template("welcome.html")
+@app.route('/send-message', methods=['POST'])
+def send_message():
+    data = request.get_json()
+    username = data['username']
+    message = data['message']
+    sentiment = data['sentiment']
 
-# Route pour afficher le formulaire de tweet
-@app.route("/continue", methods=["GET"])
-def continue_to_tweet():
-    return render_template("tweet.html")
+    add_message(username, message, sentiment)
 
-# Route pour soumettre un tweet et comparer les résultats
-@app.route("/submit_tweet", methods=["POST"])
-def submit_tweet():
-    name = request.form['name']
-    tweet = request.form['tweet']
-    sentiment_value = int(request.form['sentiment'])  # 0 pour positif, 1 pour négatif
+    return jsonify({'message': 'Message envoyé avec succès'})
 
-    # Prétraiter le tweet (lemmatisation)
-    processed_tweet = lemmatizer.lemmatize(tweet)
-
-    # Utiliser le modèle FastText pour vectoriser le tweet
-    tweet_vector = model.get_sentence_vector(processed_tweet)
-
-    # Faire une prédiction avec le modèle LSTM
-    prediction = lstm_model.predict([tweet_vector])
-
-    # Si la prédiction est > 0.5, alors le modèle prédit "négatif" (1), sinon "positif" (0)
-    predicted_sentiment = 1 if prediction[0] > 0.5 else 0
-
-    # Comparer la prédiction du modèle avec le sentiment soumis par l'utilisateur
-    is_correct = (predicted_sentiment == sentiment_value)
-
-    # Préparer les données à sauvegarder dans le fichier CSV
-    tweet_data = {
-        'ID': sum(1 for _ in open('tweets.csv')) if os.path.exists('tweets.csv') else 1,
-        'Nom Utilisateur': name,
-        'Heure': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'Tweet': tweet,
-        'Sentiment': sentiment_value,
-        'Prédiction': predicted_sentiment
-    }
-
-    # Sauvegarder le tweet dans le fichier CSV 
-    save_tweet_to_csv(tweet_data)
-
-    # Message à retourner à l'utilisateur
-    result_message = f"Merci {name}, votre tweet a été soumis avec succès."
-    if is_correct:
-        result_message += " Le modèle a correctement prédit le sentiment."
-    else:
-        result_message += " Le modèle n'a pas correctement prédit le sentiment."
-
+@app.route('/chat-history', methods=['GET'])
+def chat_history():
+    messages = get_chat_history()
     return jsonify({
-        'name': name,
-        'tweet': tweet,
-        'sentiment_utilisateur': sentiment_value,
-        'sentiment_model': predicted_sentiment,
-        'correct_prediction': is_correct,
-        'message': result_message
+        'messages': [
+            {'username': msg[0], 'message': msg[1], 'sentiment': msg[2], 'time': msg[3]}
+        for msg in messages]
     })
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
+if __name__ == '__main__':
+    init_db()
+    app.run(debug=True)
