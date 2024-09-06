@@ -1,52 +1,31 @@
-import subprocess
+import mlflow.keras
+import zipfile
+import os
 import re
-import nltk
-from nltk.stem import WordNetLemmatizer
 import fasttext
 import numpy as np
 import pandas as pd
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.models import load_model
-import os
-import zipfile
 
-# Télécharger les données NLTK nécessaires (si ce n'est pas déjà fait)
-nltk.download('wordnet')
-nltk.download('omw-1.4')
+# Chemin du fichier zip et des fichiers décompressés
+zip_path = './models/lstm_model_lemma_ft.zip'
+extract_path = './models/unzipped_lstm_model/'  # Chemin où les fichiers décompressés seront placés
+model_uri = './models/unzipped_lstm_model/model_lstm'  # Le chemin pour le modèle décompressé
 
-# Initialiser le lemmatiseur NLTK
-lemmatizer = WordNetLemmatizer()
+# Décompression du modèle de machine learning (LSTM)
+if os.path.exists(zip_path):
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(extract_path)
 
-# Fonction de prétraitement du texte
-def preprocess_text(text):
-    # Convertir en minuscules
-    text = text.lower()
-    # Supprimer les caractères spéciaux
-    text = re.sub(r'\W', ' ', text)
-    text = re.sub(r'\s+', ' ', text)
-    # Lemmatisation avec NLTK
-    words = text.split()
-    lemmatized_words = [lemmatizer.lemmatize(word) for word in words]
-    return ' '.join(lemmatized_words)
+# Charger le modèle LSTM depuis MLflow après décompression
+if os.path.exists(model_uri):
+    lstm_model = mlflow.keras.load_model(model_uri)
+else:
+    raise FileNotFoundError(f"Le modèle n'a pas été trouvé à l'emplacement : {model_uri}")
 
 # Charger le modèle FastText
 fasttext_model = fasttext.load_model('./modèle/cc.fr.300.bin')
-
-# Chemin du fichier zip et des fichiers décompressés
-zip_path = './models/LSTM_plus_Lemmatization_plus_FastText_model.zip'
-extract_path = './models/'
-model_path = './models/LSTM_plus_Lemmatization_plus_FastText_model.h5'
-
-# Décompression du modèle de machine learning (LSTM)
-
-with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-zip_ref.extractall(extract_path)
-
-# Charger le modèle LSTM après décompression
-
-lstm_model = load_model('./models/LSTM_plus_Lemmatization_plus_FastText_model.h5')
 
 # Initialiser l'application Flask
 app = Flask(__name__)
@@ -67,6 +46,15 @@ def add_message_to_csv(username, message, sentiment):
     df = df.append(new_data, ignore_index=True)
     df.to_csv(CSV_FILE, index=False)
 
+# Prétraiter le texte
+def preprocess_text(text):
+    # Convertir en minuscules
+    text = text.lower()
+    # Supprimer les caractères spéciaux
+    text = re.sub(r'\W', ' ', text)
+    text = re.sub(r'\s+', ' ', text)
+    return text
+
 # Convertir le texte en vecteurs avec FastText
 def text_to_fasttext_vector(text):
     words = text.split()
@@ -76,10 +64,12 @@ def text_to_fasttext_vector(text):
 # Fonction pour prédire le sentiment avec LSTM
 def predict_sentiment(text):
     cleaned_text = preprocess_text(text)
-    # Tokenisation et séquence si nécessaire (ajuster selon ton tokenizer)
-    seq = tokenizer.texts_to_sequences([cleaned_text])
-    padded_seq = pad_sequences(seq, maxlen=100)
-    prediction = lstm_model.predict(padded_seq)
+    # Convertir le texte nettoyé en vecteurs FastText
+    vectorized_text = text_to_fasttext_vector(cleaned_text)
+    # Redimensionner pour correspondre aux attentes du modèle
+    vectorized_text = np.expand_dims(vectorized_text, axis=0)
+    # Faire la prédiction avec le modèle LSTM chargé depuis MLflow
+    prediction = lstm_model.predict(vectorized_text)
     return np.argmax(prediction)  # 0 pour négatif, 1 pour positif
 
 # Route pour la page Welcome
