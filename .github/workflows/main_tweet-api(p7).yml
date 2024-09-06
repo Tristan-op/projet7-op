@@ -1,7 +1,10 @@
-name: Deploy Python App to Azure Web App
+name: main_tweet_api
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
     branches:
       - main
 
@@ -10,41 +13,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Étape 1 : Checkout du code source
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      # Étape 2 : Installer Python et pip
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
 
-      # Étape 3 : Créer un environnement virtuel et activer
-      - name: Create and activate virtual environment
-        run: |
-          pip install --upgrade pip  # Mettre à jour pip
-          pip install -r requirements.txt  # Installer les dépendances à partir du fichier requirements.txt
-          pip freeze  # Vérification des paquets installés
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
-      # Étape 4 : Télécharger et décompresser le modèle LSTM depuis GitHub
-      - name: Download LSTM model from GitHub
-        run: |
-          wget https://github.com/Tristan-op/projet7-op/releases/download/Projet-7/LSTM_plus_Lemmatization_plus_FastText_model.zip -O ./models/LSTM_model.zip
-          unzip ./models/LSTM_model.zip -d ./models/temp_model
+    - name: Download FastText model
+      run: |
+        wget -P ./modèle https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.fr.300.bin.gz
+        gunzip ./modèle/cc.fr.300.bin.gz
 
-      # Étape 5 : Télécharger le modèle FastText si nécessaire
-      - name: Setup FastText Model
-        run: |
-          if [ ! -f "./models/cc.en.300.bin" ]; then
-            wget -P ./models/ https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz
-            gzip -d ./models/cc.en.300.bin.gz
-          fi
+    - name: Unzip LSTM model
+      run: |
+        unzip ./modèle/sentiment_lstm_model.zip -d ./modèle
 
-      # Étape 6 : Déployer l'application sur Azure Web App
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: 'tweet-api'
-          slot-name: 'p7'
-          publish-profile: ${{ secrets.AZURE_API }}
+    - name: Run API
+      run: |
+        python main.py

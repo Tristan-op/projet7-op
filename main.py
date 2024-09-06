@@ -1,60 +1,108 @@
+import re
+import spacy
+import fasttext
+import numpy as np
+import pandas as pd
 from flask import Flask, request, jsonify
-import sqlite3
 from datetime import datetime
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.models import load_model
+import os
+import zipfile
 
+# Charger le modèle spaCy pour la lemmatisation
+nlp = spacy.load('fr_core_news_md')
+
+# Charger le modèle FastText
+fasttext_model = fasttext.load_model('./modèle/cc.fr.300.bin')
+
+# Décompression du modèle de machine learning (LSTM) si non décompressé
+if not os.path.exists('./modèle/sentiment_lstm_model.h5'):
+    with zipfile.ZipFile('./modèle/sentiment_lstm_model.zip', 'r') as zip_ref:
+        zip_ref.extractall('./modèle')
+
+# Charger le modèle LSTM après décompression
+lstm_model = load_model('./modèle/sentiment_lstm_model.h5')
+
+# Initialiser l'application Flask
 app = Flask(__name__)
 
-# Création de la base de données
-def init_db():
-    with sqlite3.connect('chat.db') as conn:
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS messages (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT NOT NULL,
-                message TEXT NOT NULL,
-                sentiment INTEGER NOT NULL,
-                time TEXT NOT NULL
-            )
-        ''')
-    print("Base de données initialisée.")
+# Fichier CSV pour stocker les tweets
+CSV_FILE = 'tweets.csv'
 
-# Ajouter un message dans la base de données
-def add_message(username, message, sentiment):
-    with sqlite3.connect('chat.db') as conn:
-        cur = conn.cursor()
-        cur.execute('''
-            INSERT INTO messages (username, message, sentiment, time)
-            VALUES (?, ?, ?, ?)
-        ''', (username, message, sentiment, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-        conn.commit()
+# Initialiser le fichier CSV s'il n'existe pas encore
+if not os.path.exists(CSV_FILE):
+    df = pd.DataFrame(columns=['username', 'message', 'sentiment', 'time'])
+    df.to_csv(CSV_FILE, index=False)
 
-# Récupérer l'historique des messages
-def get_chat_history():
-    with sqlite3.connect('chat.db') as conn:
-        cur = conn.cursor()
-        cur.execute('SELECT username, message, sentiment, time FROM messages ORDER BY time DESC')
-        return cur.fetchall()
+# Fonction pour ajouter un message au fichier CSV
+def add_message_to_csv(username, message, sentiment):
+    time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    new_data = {'username': username, 'message': message, 'sentiment': sentiment, 'time': time}
+    df = pd.read_csv(CSV_FILE)
+    df = df.append(new_data, ignore_index=True)
+    df.to_csv(CSV_FILE, index=False)
 
+# Prétraiter le texte
+def preprocess_text(text):
+    # Enlever les caractères spéciaux
+    text = re.sub(r'\W', ' ', text)
+    # Convertir en minuscules
+    text = text.lower()
+    # Lemmatisation avec spaCy
+    doc = nlp(text)
+    return ' '.join([token.lemma_ for token in doc])
+
+# Convertir le texte en vecteurs avec FastText
+def text_to_fasttext_vector(text):
+    words = text.split()
+    word_vectors = [fasttext_model.get_word_vector(word) for word in words]
+    return np.mean(word_vectors, axis=0)
+
+# Fonction pour prédire le sentiment avec LSTM
+def predict_sentiment(text):
+    cleaned_text = preprocess_text(text)
+    # Tokenisation et séquence si nécessaire (ajuster selon ton tokenizer)
+    seq = tokenizer.texts_to_sequences([cleaned_text])
+    padded_seq = pad_sequences(seq, maxlen=100)
+    prediction = lstm_model.predict(padded_seq)
+    return np.argmax(prediction)  # 0 pour négatif, 1 pour positif
+
+# Endpoint pour envoyer un message
 @app.route('/send-message', methods=['POST'])
 def send_message():
+    # Toujours "Bob" comme nom d'utilisateur
+    username = "Bob"
     data = request.get_json()
-    username = data['username']
     message = data['message']
-    sentiment = data['sentiment']
+    user_sentiment = int(data['sentiment'])  # 0 pour négatif, 1 pour positif
 
-    add_message(username, message, sentiment)
+    # Prédire le sentiment avec le modèle
+    predicted_sentiment = predict_sentiment(message)
 
-    return jsonify({'message': 'Message envoyé avec succès'})
+    # Ajouter le message dans le fichier CSV
+    add_message_to_csv(username, message, user_sentiment)
 
-@app.route('/chat-history', methods=['GET'])
-def chat_history():
-    messages = get_chat_history()
+    # Comparer le sentiment prédit avec celui fourni par l'utilisateur
+    if predicted_sentiment == user_sentiment:
+        result_message = "Le sentiment a bien été prédit."
+    else:
+        result_message = "Le sentiment n'a pas été bien prédit."
+
+    # Retourner la réponse JSON
     return jsonify({
-        'messages': [
-            {'username': msg[0], 'message': msg[1], 'sentiment': msg[2], 'time': msg[3]}
-        for msg in messages]
+        'message': 'Message enregistré avec succès',
+        'result': result_message,
+        'predicted_sentiment': predicted_sentiment,
+        'user_sentiment': user_sentiment
     })
 
+# Endpoint pour récupérer l'historique des tweets
+@app.route('/chat-history', methods=['GET'])
+def chat_history():
+    df = pd.read_csv(CSV_FILE)
+    messages = df.to_dict('records')
+    return jsonify({'messages': messages})
+
 if __name__ == '__main__':
-    init_db()
     app.run(debug=True)
