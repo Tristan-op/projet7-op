@@ -78,28 +78,29 @@ def welcome():
 def chat():
     return render_template('chat.html')
 
+# Endpoint pour envoyer un message
 @app.route('/send-message', methods=['POST'])
 def send_message():
-    data = request.get_json()  # Récupérer le message et le sentiment de l'utilisateur
+    username = "Bob"
+    data = request.get_json()
     message = data['message']
-    user_sentiment = int(data['sentiment'])  # 0 pour négatif, 1 pour positif
+    user_sentiment = int(data['sentiment'])
 
-    # Prédire le sentiment avec le modèle
     predicted_sentiment = predict_sentiment(message)
 
-    # Comparer le sentiment prédit avec celui fourni par l'utilisateur
-    if predicted_sentiment == user_sentiment:
-        response_message = "Bob: J'ai bien compris tes sentiments."
-    else:
-        response_message = "Bob: Désolé, j'apprends encore, je n'ai pas bien compris tes sentiments."
+    add_message_to_csv(username, message, user_sentiment)
 
-    # Retourner la réponse JSON avec le message de Bob
+    if predicted_sentiment == user_sentiment:
+        result_message = "Le sentiment a bien été prédit."
+    else:
+        result_message = "Le sentiment n'a pas été bien prédit."
+
     return jsonify({
-        'message': response_message,
+        'message': 'Message enregistré avec succès',
+        'result': result_message,
         'predicted_sentiment': predicted_sentiment,
         'user_sentiment': user_sentiment
     })
-
 
 # Endpoint pour récupérer l'historique des tweets
 @app.route('/chat-history', methods=['GET'])
@@ -109,5 +110,4 @@ def chat_history():
     return jsonify({'messages': messages})
 
 if __name__ == '__main__':
-    port = int(os.getenv("PORT", 8000))  # Utilise 8000 par défaut si PORT n'est pas défini
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(debug=False)
