@@ -10,6 +10,7 @@ h5py==3.7.0
 joblib==1.2.0
 requests==2.28.1
 pandas==1.4.3
-setuptools>=58.0.4        # Installé avant FastText pour gérer les installations de packages C++
-wheel==0.38.4             # Nécessaire pour installer des fichiers .whl
-pybind11==2.10.0          # Installé avant FastText pour les bindings C++
+setuptools>=58.0.4
+wheel==0.38.4
+pybind11==2.10.0
+pydantic==1.8.2  # Version compatible avec spaCy
