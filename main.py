@@ -1,8 +1,10 @@
-# Importations nécessaires pour le reste de l'application
-from spacy import *
-from fasttext import *
-from numpy import *
-from pandas import *
+import subprocess
+import re
+import nltk
+from nltk.stem import WordNetLemmatizer
+import fasttext
+import numpy as np
+import pandas as pd
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime
 from tensorflow.keras.preprocessing.sequence import pad_sequences
@@ -10,19 +12,35 @@ from tensorflow.keras.models import load_model
 import os
 import zipfile
 
-# Charger le modèle spaCy pour l'anglais
-nlp = spacy.load('en_core_web_md')
+# Télécharger les données NLTK nécessaires (si ce n'est pas déjà fait)
+nltk.download('wordnet')
+nltk.download('omw-1.4')
+
+# Initialiser le lemmatiseur NLTK
+lemmatizer = WordNetLemmatizer()
+
+# Fonction de prétraitement du texte
+def preprocess_text(text):
+    # Convertir en minuscules
+    text = text.lower()
+    # Supprimer les caractères spéciaux
+    text = re.sub(r'\W', ' ', text)
+    text = re.sub(r'\s+', ' ', text)
+    # Lemmatisation avec NLTK
+    words = text.split()
+    lemmatized_words = [lemmatizer.lemmatize(word) for word in words]
+    return ' '.join(lemmatized_words)
 
 # Charger le modèle FastText
-fasttext_model = fasttext.load_model('./models/cc.fr.300.bin')
+fasttext_model = fasttext.load_model('./modèle/cc.fr.300.bin')
 
 # Décompression du modèle de machine learning (LSTM) si non décompressé
-if not os.path.exists('./models/LSTM_plus_Lemmatization_plus_FastText_model.h5'):
-    with zipfile.ZipFile('./models/LSTM_plus_Lemmatization_plus_FastText_model.zip', 'r') as zip_ref:
-        zip_ref.extractall('./models')
+if not os.path.exists('./modèle/sentiment_lstm_model.h5'):
+    with zipfile.ZipFile('./modèle/sentiment_lstm_model.zip', 'r') as zip_ref:
+        zip_ref.extractall('./modèle')
 
 # Charger le modèle LSTM après décompression
-lstm_model = load_model('./models/LSTM_plus_Lemmatization_plus_FastText_model.h5')
+lstm_model = load_model('./modèle/sentiment_lstm_model.h5')
 
 # Initialiser l'application Flask
 app = Flask(__name__)
@@ -42,16 +60,6 @@ def add_message_to_csv(username, message, sentiment):
     df = pd.read_csv(CSV_FILE)
     df = df.append(new_data, ignore_index=True)
     df.to_csv(CSV_FILE, index=False)
-
-# Prétraiter le texte
-def preprocess_text(text):
-    # Enlever les caractères spéciaux
-    text = re.sub(r'\W', ' ', text)
-    # Convertir en minuscules
-    text = text.lower()
-    # Lemmatisation avec spaCy
-    doc = nlp(text)
-    return ' '.join([token.lemma_ for token in doc])
 
 # Convertir le texte en vecteurs avec FastText
 def text_to_fasttext_vector(text):
