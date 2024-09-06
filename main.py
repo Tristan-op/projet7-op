@@ -34,13 +34,19 @@ def preprocess_text(text):
 # Charger le modèle FastText
 fasttext_model = fasttext.load_model('./modèle/cc.fr.300.bin')
 
-# Décompression du modèle de machine learning (LSTM) si non décompressé
-if not os.path.exists('./models/LSTM_plus_Lemmatization_plus_FastText_model.h5'):
-    with zipfile.ZipFile('./models/LSTM_plus_Lemmatization_plus_FastText_model.zip', 'r') as zip_ref:
-        zip_ref.extractall('./models')
+# Chemin du fichier zip et des fichiers décompressés
+zip_path = './models/LSTM_plus_Lemmatization_plus_FastText_model.zip'
+extract_path = './models/'
+model_path = './models/LSTM_plus_Lemmatization_plus_FastText_model.h5'
+
+# Décompression du modèle de machine learning (LSTM)
+if os.path.exists(zip_path):
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(extract_path)
 
 # Charger le modèle LSTM après décompression
-lstm_model = load_model('./modèle/sentiment_lstm_model.h5')
+if os.path.exists(model_path):
+    lstm_model = load_model(model_path)
 
 # Initialiser l'application Flask
 app = Flask(__name__)
