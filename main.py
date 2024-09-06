@@ -78,29 +78,28 @@ def welcome():
 def chat():
     return render_template('chat.html')
 
-# Endpoint pour envoyer un message
 @app.route('/send-message', methods=['POST'])
 def send_message():
-    username = "Bob"
-    data = request.get_json()
+    data = request.get_json()  # Récupérer le message et le sentiment de l'utilisateur
     message = data['message']
-    user_sentiment = int(data['sentiment'])
+    user_sentiment = int(data['sentiment'])  # 0 pour négatif, 1 pour positif
 
+    # Prédire le sentiment avec le modèle
     predicted_sentiment = predict_sentiment(message)
 
-    add_message_to_csv(username, message, user_sentiment)
-
+    # Comparer le sentiment prédit avec celui fourni par l'utilisateur
     if predicted_sentiment == user_sentiment:
-        result_message = "Le sentiment a bien été prédit."
+        response_message = "Bob: J'ai bien compris tes sentiments."
     else:
-        result_message = "Le sentiment n'a pas été bien prédit."
+        response_message = "Bob: Désolé, j'apprends encore, je n'ai pas bien compris tes sentiments."
 
+    # Retourner la réponse JSON avec le message de Bob
     return jsonify({
-        'message': 'Message enregistré avec succès',
-        'result': result_message,
+        'message': response_message,
         'predicted_sentiment': predicted_sentiment,
         'user_sentiment': user_sentiment
     })
+
 
 # Endpoint pour récupérer l'historique des tweets
 @app.route('/chat-history', methods=['GET'])
@@ -110,4 +109,4 @@ def chat_history():
     return jsonify({'messages': messages})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    gunicorn -w 4 -b 0.0.0.0:8000 main:app
