@@ -21,19 +21,19 @@ jobs:
       with:
         python-version: '3.8'
 
-    - name: Install dependencies
+    - name: Install primary dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+
+    - name: Install FastText separately
+      run: |
+        pip install fasttext==0.9.2
 
     - name: Download FastText model
       run: |
         wget -P ./modèle https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.fr.300.bin.gz
         gunzip ./modèle/cc.fr.300.bin.gz
-
-    - name: Unzip LSTM model
-      run: |
-        unzip ./modèle/sentiment_lstm_model.zip -d ./modèle
 
     - name: Run API
       run: |
