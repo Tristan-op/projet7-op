@@ -40,13 +40,13 @@ extract_path = './models/'
 model_path = './models/LSTM_plus_Lemmatization_plus_FastText_model.h5'
 
 # Décompression du modèle de machine learning (LSTM)
-if os.path.exists(zip_path):
-    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        zip_ref.extractall(extract_path)
+
+with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+zip_ref.extractall(extract_path)
 
 # Charger le modèle LSTM après décompression
-if os.path.exists(model_path):
-    lstm_model = load_model(model_path)
+
+lstm_model = load_model('./models/LSTM_plus_Lemmatization_plus_FastText_model.h5')
 
 # Initialiser l'application Flask
 app = Flask(__name__)
