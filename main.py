@@ -108,5 +108,5 @@ def chat_history():
     messages = df.to_dict('records')
     return jsonify({'messages': messages})
 
-if __name__ == '__main__':
-    gunicorn -w 4 -b 0.0.0.0:8000 main:app
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT"))
