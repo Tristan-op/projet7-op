@@ -108,5 +108,6 @@ def chat_history():
     messages = df.to_dict('records')
     return jsonify({'messages': messages})
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT")))
+if __name__ == '__main__':
+    port = int(os.getenv("PORT", 8000))  # Utilise 8000 par défaut si PORT n'est pas défini
+    app.run(host="0.0.0.0", port=port, debug=False)
