@@ -1,4 +1,3 @@
-import mlflow.keras
 import zipfile
 import os
 import re
@@ -7,22 +6,23 @@ import numpy as np
 import pandas as pd
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime
+from tensorflow.keras.models import load_model
 
 # Chemin du fichier zip et des fichiers décompressés
-zip_path = './models/lstm_model_lemma_ft.zip'
-extract_path = './models/unzipped_lstm_model/'  # Chemin où les fichiers décompressés seront placés
-model_uri = './models/unzipped_lstm_model/model_lstm'  # Le chemin pour le modèle décompressé
+zip_path = './models/LSTM_plus_Lemmatization_plus_FastText_model.zip'
+extract_path = './models/unzipped_model/'
+model_path = './models/unzipped_model/LSTM_plus_Lemmatization_plus_FastText_model.h5'  # Chemin du modèle décompressé
 
 # Décompression du modèle de machine learning (LSTM)
 if os.path.exists(zip_path):
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         zip_ref.extractall(extract_path)
 
-# Charger le modèle LSTM depuis MLflow après décompression
-if os.path.exists(model_uri):
-    lstm_model = mlflow.keras.load_model(model_uri)
+# Charger le modèle LSTM directement avec Keras après décompression
+if os.path.exists(model_path):
+    lstm_model = load_model(model_path)  # Charger directement avec Keras
 else:
-    raise FileNotFoundError(f"Le modèle n'a pas été trouvé à l'emplacement : {model_uri}")
+    raise FileNotFoundError(f"Le modèle n'a pas été trouvé à l'emplacement : {model_path}")
 
 # Charger le modèle FastText
 fasttext_model = fasttext.load_model('./modèle/cc.fr.300.bin')
@@ -68,7 +68,7 @@ def predict_sentiment(text):
     vectorized_text = text_to_fasttext_vector(cleaned_text)
     # Redimensionner pour correspondre aux attentes du modèle
     vectorized_text = np.expand_dims(vectorized_text, axis=0)
-    # Faire la prédiction avec le modèle LSTM chargé depuis MLflow
+    # Faire la prédiction avec le modèle LSTM chargé
     prediction = lstm_model.predict(vectorized_text)
     return np.argmax(prediction)  # 0 pour négatif, 1 pour positif
 
