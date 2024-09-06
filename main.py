@@ -1,34 +1,13 @@
 import os
 import zipfile
 
-os.system('pip install nltk==3.7')
-import tensorflow as tf
-
-os.system('pip install tensorflow==2.9.0')
-import nltk  # NLTK pour la lemmatisation
-from nltk.stem import WordNetLemmatizer  # Importer la lemmatisation
 import csv
 from flask import Flask, render_template, request, jsonify
 from datetime import datetime
 import fasttext
 
 
-nltk.download('wordnet')  # Télécharger les ressources nécessaires
 
-
-
-# Chemin vers le modèle FastText
-model_path = './models/cc.en.300.bin'
-
-# Vérifier si le modèle existe, sinon le télécharger
-if not os.path.exists(model_path):
-    print("Téléchargement du modèle FastText...")
-    os.system("wget -P ./models/ https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz")
-    os.system("gzip -d ./models/cc.en.300.bin.gz")  # Décompresse le fichier
-    print("Téléchargement terminé.")
-
-# Charger le modèle FastText
-model = fasttext.load_model(model_path)
 
 # Chemin du fichier .zip du modèle LSTM
 zip_file_path = './models/LSTM_plus_Lemmatization_plus_FastText_model.zip'
