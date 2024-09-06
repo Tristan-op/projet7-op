@@ -8,6 +8,19 @@ import fasttext
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime
 from tensorflow.keras.models import load_model
+from tensorflow.config import experimental  # Importer seulement les fonctions nécessaires pour la configuration
+
+# Limiter l'utilisation des ressources
+physical_devices = experimental.list_physical_devices('CPU')  # Utiliser uniquement les CPU
+if physical_devices:
+    try:
+        for device in physical_devices:
+            experimental.set_virtual_device_configuration(
+                device,
+                [experimental.VirtualDeviceConfiguration(memory_limit=int(0.8 * experimental.get_memory_info(device)["total_memory"]))]
+            )
+    except RuntimeError as e:
+        print(e)
 
 # Charger le modèle FastText
 fasttext_model = fasttext.load_model('./modèle/cc.fr.300.bin')
