@@ -1,6 +1,6 @@
 Flask==2.1.2  # Assurez-vous d'utiliser une version récente de Flask
 Werkzeug==2.1.2  # Version compatible avec Flask
-tensorflow==2.17.0
+tensorflow==2.13.0
 spacy==3.5.1
 nltk==3.7
 textblob==0.17.1
