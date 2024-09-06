@@ -35,9 +35,9 @@ def preprocess_text(text):
 fasttext_model = fasttext.load_model('./modèle/cc.fr.300.bin')
 
 # Décompression du modèle de machine learning (LSTM) si non décompressé
-if not os.path.exists('./modèle/sentiment_lstm_model.h5'):
-    with zipfile.ZipFile('./modèle/sentiment_lstm_model.zip', 'r') as zip_ref:
-        zip_ref.extractall('./modèle')
+if not os.path.exists('./models/LSTM_plus_Lemmatization_plus_FastText_model.h5'):
+    with zipfile.ZipFile('./models/LSTM_plus_Lemmatization_plus_FastText_model.zip', 'r') as zip_ref:
+        zip_ref.extractall('./models')
 
 # Charger le modèle LSTM après décompression
 lstm_model = load_model('./modèle/sentiment_lstm_model.h5')
