@@ -1,3 +1,10 @@
+import subprocess
+
+# Afficher la liste des packages installés au début de l'exécution
+def list_installed_packages():
+    print("Liste des packages installés :")
+    subprocess.run(["pip", "list"])
+
 import re
 import spacy
 import fasttext
