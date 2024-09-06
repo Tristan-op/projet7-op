@@ -1,5 +1,5 @@
 import re
-import spacy
+
 import fasttext
 import numpy as np
 import pandas as pd
