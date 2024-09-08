@@ -45,3 +45,4 @@ jobs:
       with:
         app-name: 'tweet-api'
         publish-profile: ${{ secrets.AZURE_API }}
+        startup-command: 'gunicorn --bind 0.0.0.0:$PORT --timeout 600 main:app'
