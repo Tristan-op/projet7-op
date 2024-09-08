@@ -25,7 +25,7 @@ jobs:
     #- name: Create virtual environment
      # run: |
       #  python -m venv .venv  # Créer un environnement virtuel appelé '.venv'
-      "  source .venv/bin/activate
+     # "  source .venv/bin/activate
 
     # PYTHONPATH 
    # - name: Activate virtual environment and set PYTHONPATH
