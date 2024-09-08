@@ -13,7 +13,7 @@ pandas==2.2.2
 spacy==3.6.1  # Version compatible avec Python 3.11
 nltk==3.8.1
 textblob==0.17.1
-gunicorn==20.1.0
+gunicorn==22.0.0
 h5py==3.10.0  # Compatible avec Python 3.11
 requests==2.31.0
 setuptools>=65.5.0
