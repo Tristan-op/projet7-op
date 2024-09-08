@@ -86,7 +86,3 @@ def chat_history():
     df = pd.read_csv(CSV_FILE)
     messages = df.to_dict('records')
     return jsonify({'messages': messages})
-
-# --- Démarrage de l'application ---
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
