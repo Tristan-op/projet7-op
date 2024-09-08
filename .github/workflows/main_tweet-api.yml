@@ -21,28 +21,38 @@ jobs:
       with:
         python-version: '3.11'
 
+    # Créer et activer un environnement virtuel localement dans GitHub Actions
+    - name: Create virtual environment
+      run: |
+        python -m venv .venv  # Créer l'environnement virtuel
+        source .venv/bin/activate  # Activer l'environnement virtuel
+
     - name: Install primary dependencies
       run: |
+        source .venv/bin/activate  # Activer l'environnement virtuel
         python -m pip install --upgrade pip
-        pip install --no-cache-dir -r requirements.txt
-        
+        pip install --no-cache-dir -r requirements.txt  # Installer les dépendances listées dans requirements.txt
+
     # Installer FastText en dehors de `requirements.txt`
     - name: Install FastText separately
       run: |
-        pip install fasttext==0.9.2  # Installation de FastText séparément
+        source .venv/bin/activate  # Activer l'environnement virtuel
+        pip install fasttext==0.9.2  # Installer FastText séparément
 
     - name: List installed packages
       run: |
+        source .venv/bin/activate  # Activer l'environnement virtuel
         pip list  # Liste des packages pour vérifier si tout est bien installé
 
     - name: Download FastText model
       run: |
+        source .venv/bin/activate  # Activer l'environnement virtuel
         wget -P ./modèle https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.fr.300.bin.gz
         gunzip ./modèle/cc.fr.300.bin.gz
 
+    # Déployer sur Azure Web App
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'tweet-api'
         publish-profile: ${{ secrets.AZURE_API }}
-        startup-command: 'gunicorn --bind 0.0.0.0:$PORT --timeout 600 main:app'
