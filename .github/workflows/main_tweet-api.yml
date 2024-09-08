@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
   build:
@@ -16,43 +13,42 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    # Étape 1 : Installer Python
     - name: Set up Python 3.11
       uses: actions/setup-python@v2
       with:
         python-version: '3.11'
 
-    # Créer et activer un environnement virtuel localement dans GitHub Actions
+    # Étape 2 : Créer et activer l'environnement virtuel
     - name: Create virtual environment
       run: |
-        python -m venv .venv  # Créer l'environnement virtuel
+        python -m venv .venv  # Créer un environnement virtuel appelé '.venv'
         source .venv/bin/activate  # Activer l'environnement virtuel
+        python -m pip install --upgrade pip  # Mettre à jour pip
 
-    - name: Install primary dependencies
+    # Étape 3 : Installer les dépendances
+    - name: Install dependencies
       run: |
         source .venv/bin/activate  # Activer l'environnement virtuel
-        python -m pip install --upgrade pip
         pip install --no-cache-dir -r requirements.txt  # Installer les dépendances listées dans requirements.txt
 
-    # Installer FastText en dehors de `requirements.txt`
-    - name: Install FastText separately
-      run: |
-        source .venv/bin/activate  # Activer l'environnement virtuel
-        pip install fasttext==0.9.2  # Installer FastText séparément
-
+    # Étape 4 : Liste des packages installés pour vérifier si tout est bien installé
     - name: List installed packages
       run: |
         source .venv/bin/activate  # Activer l'environnement virtuel
-        pip list  # Liste des packages pour vérifier si tout est bien installé
+        pip list  # Liste des packages installés
 
+    # Étape 5 : Téléchargement du modèle FastText (si nécessaire)
     - name: Download FastText model
       run: |
         source .venv/bin/activate  # Activer l'environnement virtuel
         wget -P ./modèle https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.fr.300.bin.gz
         gunzip ./modèle/cc.fr.300.bin.gz
 
-    # Déployer sur Azure Web App
+    # Étape 6 : Déployer sur Azure Web App
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'tweet-api'
         publish-profile: ${{ secrets.AZURE_API }}
+        startup-command: 'source /home/site/wwwroot/.venv/bin/activate && gunicorn --bind 0.0.0.0:$PORT main:app'
