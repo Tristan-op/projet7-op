@@ -1,35 +1,50 @@
-name: Azure Web App Deployment
+name: main_tweet_api
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
+    # Étape 1 : Vérifier le code source
     - name: Checkout code
       uses: actions/checkout@v2
 
+    # Étape 2 : Configurer Python 3.11
     - name: Set up Python 3.11
       uses: actions/setup-python@v2
       with:
         python-version: '3.11'
 
-    - name: Install dependencies
+    # Étape 3 : Créer et activer un environnement virtuel
+    - name: Create virtual environment
       run: |
-        python -m pip install --upgrade pip
-        pip install --no-cache-dir -r requirements.txt
+        python -m venv .venv  # Créer un environnement virtuel appelé '.venv'
+        source .venv/bin/activate  # Activer l'environnement virtuel
 
-    - name: Azure Login
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    # Étape 4 : Mettre à jour pip et installer les dépendances
+    - name: Install primary dependencies
+      run: |
+        source .venv/bin/activate  # Activer l'environnement virtuel
+        python -m pip install --upgrade pip  # Mettre à jour pip
+        pip install -r requirements.txt  # Installer les dépendances depuis le fichier requirements.txt
 
-    - name: Deploy to Azure Web App
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: 'tweet-api'
-        slot-name: 'production'
+    # Étape 5 : Lister les paquets installés (pour déboguer si nécessaire)
+    - name: List installed packages
+      run: |
+        source .venv/bin/activate  # Activer l'environnement virtuel
+        pip list  # Liste des packages pour vérifier si tout est bien installé
+
+    # Étape 6 : Télécharger le modèle FastText (si nécessaire)
+    - name: Download FastText model
+      run: |
+        source .venv/bin/activate  # Activer l'environnement virtuel
+        wget -P ./modèle https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.fr.300.bin.gz
+        gunzip ./modèle/cc.fr.300.bin.gz  # Décompresser le modèle FastText
