@@ -48,3 +48,15 @@ jobs:
         source .venv/bin/activate  # Activer l'environnement virtuel
         wget -P ./modèle https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.fr.300.bin.gz
         gunzip ./modèle/cc.fr.300.bin.gz  # Décompresser le modèle FastText
+
+           # Étape 7 : Connexion à Azure
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    # Étape 8 : Déployer sur Azure Web App
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'tweet-api'
