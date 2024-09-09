@@ -1,4 +1,11 @@
 import os
+import sys
+
+# --- Activer l'environnement virtuel ---
+activate_this = '/home/site/wwwroot/.venv/bin/activate_this.py'
+if os.path.exists(activate_this):
+    exec(open(activate_this).read(), dict(__file__=activate_this))
+
 import zipfile
 import re
 #import numpy as np
