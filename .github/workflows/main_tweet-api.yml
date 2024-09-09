@@ -26,26 +26,26 @@ jobs:
     # Étape 3 : Créer et activer un environnement virtuel
     - name: Create virtual environment
       run: |
-        python -m venv .venv  # Créer un environnement virtuel appelé '.venv'
-        . $(pwd)/.venv/bin/activate  # Activer l'environnement virtuel
+        python -m venv /home/site/wwwroot/.venv  # Créer un environnement virtuel appelé '.venv'
+        . /home/site/wwwroot/.venv/bin/activate  # Activer l'environnement virtuel
 
     # Étape 4 : Mettre à jour pip et installer les dépendances
     - name: Install dependencies
       run: |
-        . $(pwd)/.venv/bin/activate  # Activer l'environnement virtuel
+        . /home/site/wwwroot/.venv/bin/activate  # Activer l'environnement virtuel
         python -m pip install --upgrade pip  # Mettre à jour pip
-        pip install -r requirements.txt  # Installer les dépendances depuis le fichier requirements.txt
+        pip install -r /home/site/wwwroot/requirements.txt  # Installer les dépendances depuis le fichier requirements.txt
 
     # Étape 5 : Vérifier que toutes les bibliothèques sont bien installées
     - name: Verify installed packages
       run: |
-        . $(pwd)/.venv/bin/activate  # Activer l'environnement virtuel
+        . /home/site/wwwroot/.venv/bin/activate  # Activer l'environnement virtuel
         pip list  # Lister les packages pour vérifier si tout est bien installé
 
     # Étape 6 : Télécharger le modèle FastText (si nécessaire)
     - name: Download FastText model
       run: |
-        . $(pwd)/.venv/bin/activate  # Activer l'environnement virtuel
+        . /home/site/wwwroot/.venv/bin/activate  # Activer l'environnement virtuel
         wget -P ./modèle https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.fr.300.bin.gz
         gunzip ./modèle/cc.fr.300.bin.gz  # Décompresser le modèle FastText
 
@@ -61,3 +61,4 @@ jobs:
       with:
         app-name: 'tweet-api'
         publish-profile: ${{ secrets.AZURE_API }}
+
