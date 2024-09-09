@@ -27,7 +27,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip  # Mettre à jour pip
-        pip install -r /home/site/wwwroot/requirements.txt  # Installer les dépendances dans l'environnement global
+        pip install -r requirements.txt  # Installer les dépendances dans l'environnement global
 
     # Étape 4 : Vérifier que toutes les bibliothèques sont bien installées
     - name: Verify installed packages
@@ -52,4 +52,3 @@ jobs:
       with:
         app-name: 'tweet-api'
         publish-profile: ${{ secrets.AZURE_API }}
-
