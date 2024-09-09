@@ -23,109 +23,32 @@ jobs:
       with:
         python-version: '3.11'
 
-    # Étape 3 : Mettre à jour pip
-    - name: Upgrade pip
+    # Étape 3 : Créer et activer un environnement virtuel
+    - name: Create virtual environment
       run: |
+        python -m venv .venv  # Créer un environnement virtuel appelé '.venv'
+        . .venv/bin/activate  # Activer l'environnement virtuel
+
+    # Étape 4 : Mettre à jour pip et installer les dépendances
+    - name: Install dependencies
+      run: |
+        . .venv/bin/activate  # Activer l'environnement virtuel
         python -m pip install --upgrade pip  # Mettre à jour pip
+        pip install -r requirements.txt  # Installer les dépendances depuis le fichier requirements.txt
 
-    # Étape 4 : Installer les outils de base
-    - name: Install setuptools
-      run: |
-        pip install setuptools>=65.5.0
-
-    - name: Install wheel
-      run: |
-        pip install wheel==0.40.0
-
-    - name: Install pybind11
-      run: |
-        pip install pybind11==2.10.4
-
-    - name: Install gunicorn
-      run: |
-        pip install gunicorn==20.1.0
-
-    - name: Install requests
-      run: |
-        pip install requests==2.31.0
-
-    # Étape 5 : Installer les bibliothèques de traitement du langage naturel (NLP)
-    - name: Install NLTK
-      run: |
-        pip install nltk==3.8.1
-
-    - name: Install SpaCy
-      run: |
-        pip install spacy==3.6.1
-
-    - name: Install Gensim
-      run: |
-        pip install gensim==4.3.0
-
-    - name: Install TextBlob
-      run: |
-        pip install textblob==0.17.1
-
-    # Étape 6 : Installer les bibliothèques scientifiques
-    - name: Install Numpy
-      run: |
-        pip install numpy==1.26.4
-
-    - name: Install Pandas
-      run: |
-        pip install pandas==2.2.2
-
-    - name: Install Matplotlib
-      run: |
-        pip install matplotlib==3.8.4
-
-    - name: Install Seaborn
-      run: |
-        pip install seaborn==0.13.2
-
-    # Étape 7 : Installer les bibliothèques de machine learning et de deep learning
-    - name: Install Scikit-learn
-      run: |
-        pip install scikit-learn==1.2.2
-
-    - name: Install Joblib
-      run: |
-        pip install joblib==1.2.0
-
-    - name: Install TensorFlow
-      run: |
-        pip install tensorflow==2.17.0
-
-    - name: Install Keras
-      run: |
-        pip install keras==3.4.1
-
-    - name: Install h5py
-      run: |
-        pip install h5py==3.10.0
-
-    # Étape 8 : Installer les bibliothèques de gestion de modèles et de logs
-    - name: Install MLFlow
-      run: |
-        pip install mlflow==2.16.0
-
-    - name: Install Pydantic
-      run: |
-        pip install pydantic==1.10.12
-
-    # Étape 9 : Télécharger le modèle FastText (si nécessaire)
+    # Étape 5 : Télécharger le modèle FastText (si nécessaire)
     - name: Download FastText model
       run: |
         wget -P ./modèle https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.fr.300.bin.gz
         gunzip ./modèle/cc.fr.300.bin.gz  # Décompresser le modèle FastText
 
-    # Étape 10 : Connexion à Azure
+    # Étape 6 : Connexion à Azure
     - name: Azure Login
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    # Étape 11 : Déployer sur Azure Web App
+    # Étape 7 : Déployer sur Azure Web App
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
