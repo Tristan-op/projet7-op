@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
   build:
@@ -23,25 +20,34 @@ jobs:
       with:
         python-version: '3.11'
 
-    # Étape 3 : Créer et activer un environnement virtuel
-    - name: Create virtual environment
+    # Étape 3 : Créer et activer un environnement virtuel avec Python 3.11
+    - name: Create virtual environment with Python 3.11
       run: |
-        python -m venv .venv  # Créer un environnement virtuel appelé '.venv'
-        . .venv/bin/activate  # Activer l'environnement virtuel
+        /opt/hostedtoolcache/Python/3.11.9/x64/bin/python3 -m venv .venv  # Utiliser explicitement Python 3.11
+        . .venv/bin/activate  # Activer l'environnement virtuel avec Python 3.11
 
     # Étape 4 : Mettre à jour pip et installer les dépendances
     - name: Install dependencies
       run: |
-        . .venv/bin/activate  # Activer l'environnement virtuel
+        . .venv/bin/activate  # Activer l'environnement virtuel avec Python 3.11
         python -m pip install --upgrade pip  # Mettre à jour pip
-        pip install -r requirements.txt  # Installer les dépendances depuis le fichier requirements.txt
-
-    # Étape 5 : Télécharger le modèle FastText (si nécessaire)
+        pip install -r requirements.txt  # Installer les dépendances
+        
+   # Étape 5 : Télécharger le modèle FastText (si nécessaire)
     - name: Download FastText model
       run: |
+        . .venv/bin/activate  # Activer l'environnement virtuel avec Python 3.11
         wget -P ./modèle https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.fr.300.bin.gz
         gunzip ./modèle/cc.fr.300.bin.gz  # Décompresser le modèle FastText
 
+    # Étape 5 : Vérifier la version de Python
+    - name: Verify Python version
+      run: |
+        . .venv/bin/activate
+        python --version
+
+
+  
     # Étape 6 : Connexion à Azure
     - name: Azure Login
       uses: azure/login@v1
