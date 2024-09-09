@@ -26,7 +26,6 @@ install_requirements()
 # Ensuite, importer les bibliothèques après l'installation
 import numpy as np
 import pandas as pd
-import fasttext
 import os
 import zipfile
 import re
