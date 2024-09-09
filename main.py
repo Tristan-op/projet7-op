@@ -1,9 +1,9 @@
 import os
 import zipfile
 import re
-import numpy as np
-import pandas as pd
-import fasttext
+#import numpy as np
+#import pandas as pd
+#import fasttext
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime
 from tensorflow.keras.models import load_model
