@@ -26,12 +26,6 @@ jobs:
         /opt/hostedtoolcache/Python/3.11.9/x64/bin/python3 -m venv .venv  # Utiliser explicitement Python 3.11
         . .venv/bin/activate  # Activer l'environnement virtuel avec Python 3.11
 
-    # Étape 4 : Mettre à jour pip et installer les dépendances
-    - name: Install dependencies
-      run: |
-        . .venv/bin/activate  # Activer l'environnement virtuel avec Python 3.11
-        python -m pip install --upgrade pip  # Mettre à jour pip
-        pip install -r requirements.txt  # Installer les dépendances
         
    # Étape 5 : Télécharger le modèle FastText (si nécessaire)
     - name: Download FastText model
