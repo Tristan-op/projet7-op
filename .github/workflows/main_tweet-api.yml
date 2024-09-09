@@ -23,39 +23,30 @@ jobs:
       with:
         python-version: '3.11'
 
-    # Étape 3 : Créer et activer un environnement virtuel
-    - name: Create virtual environment
-      run: |
-        python -m venv /home/site/wwwroot/.venv  # Créer un environnement virtuel appelé '.venv'
-        . /home/site/wwwroot/.venv/bin/activate  # Activer l'environnement virtuel
-
-    # Étape 4 : Mettre à jour pip et installer les dépendances
+    # Étape 3 : Mettre à jour pip et installer les dépendances globalement
     - name: Install dependencies
       run: |
-        . /home/site/wwwroot/.venv/bin/activate  # Activer l'environnement virtuel
         python -m pip install --upgrade pip  # Mettre à jour pip
-        pip install -r /home/site/wwwroot/requirements.txt  # Installer les dépendances depuis le fichier requirements.txt
+        pip install -r /home/site/wwwroot/requirements.txt  # Installer les dépendances dans l'environnement global
 
-    # Étape 5 : Vérifier que toutes les bibliothèques sont bien installées
+    # Étape 4 : Vérifier que toutes les bibliothèques sont bien installées
     - name: Verify installed packages
       run: |
-        . /home/site/wwwroot/.venv/bin/activate  # Activer l'environnement virtuel
         pip list  # Lister les packages pour vérifier si tout est bien installé
 
-    # Étape 6 : Télécharger le modèle FastText (si nécessaire)
+    # Étape 5 : Télécharger le modèle FastText (si nécessaire)
     - name: Download FastText model
       run: |
-        . /home/site/wwwroot/.venv/bin/activate  # Activer l'environnement virtuel
         wget -P ./modèle https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.fr.300.bin.gz
         gunzip ./modèle/cc.fr.300.bin.gz  # Décompresser le modèle FastText
 
-    # Étape 7 : Connexion à Azure
+    # Étape 6 : Connexion à Azure
     - name: Azure Login
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    # Étape 8 : Déployer sur Azure Web App
+    # Étape 7 : Déployer sur Azure Web App
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
