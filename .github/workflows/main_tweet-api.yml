@@ -19,17 +19,18 @@ jobs:
         python-version: '3.11'
 
     # Créer et activer l'environnement virtuel, puis installer les dépendances
-    - name: Install pybind11 (dependency for fasttext)
+    - name: Install dependencies without fasttext
       run: |
         python -m venv .venv  # Créer l'environnement virtuel
         . .venv/bin/activate  # Activer l'environnement virtuel
         python -m pip install --upgrade pip  # Mettre à jour pip
-        pip install pybind11  # Installer pybind11
+        pip install fastapi==0.95.0 uvicorn==0.22.0 pydantic==1.10.2 spacy==3.5.1 tensorflow-intel==2.8.0 jinja2==3.1.2 numpy==1.21.0
 
-    - name: Install dependencies
+    # Installer la version précompilée de FastText depuis GitHub
+    - name: Install FastText precompiled
       run: |
         . .venv/bin/activate  # Activer l'environnement virtuel
-        pip install -r requirements.txt  # Installer les dépendances du fichier requirements.txt
+        pip install https://github.com/facebookresearch/fastText/archive/v0.9.2.zip
 
     # Télécharger le modèle FastText dans l'environnement virtuel
     - name: Download FastText model
