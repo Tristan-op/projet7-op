@@ -12,6 +12,11 @@ try:
 except ImportError:
     install_package('fastapi')
 
+try:
+    import gensim
+except ImportError:
+    install_package('gensim')
+
 
 import os
 import subprocess
