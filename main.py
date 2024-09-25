@@ -1,93 +1,67 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
+# Importation complète des modules
+import fastapi
+import pydantic
 import spacy
 import fasttext
 import tensorflow as tf
 import numpy as np
-from datetime import datetime
 import re
+from datetime import datetime
+from fastapi import responses
 
-# Initialiser l'application FastAPI
-app = FastAPI()
+# Créer une application FastAPI
+app = fastapi.FastAPI()
 
-# Configuration des templates
-templates = Jinja2Templates(directory="template")
+# Configurer Jinja2 pour les templates
+templates = fastapi.templating.Jinja2Templates(directory="templates")
 
-# Charger le modèle TensorFlow
-model = tf.keras.models.load_model("./models/LSTM_plus_Lemmatization_plus_FastText_model.h5")
+# Modèle pour la gestion des données
+class Message(pydantic.BaseModel):
+    user: str
+    text: str
+    sentiment: str
 
-# Charger le modèle FastText
-ft_model = fasttext.load_model("cc.en.300.bin")
-
-# Charger SpaCy pour la lemmatisation anglaise
+# Charger les modèles de machine learning
 nlp = spacy.load("en_core_web_sm")
+ft_model = fasttext.load_model("cc.en.300.bin")
+lstm_model = tf.keras.models.load_model('./models/LSTM_plus_Lemmatization_plus_FastText_model.h5')
 
-# Simuler un historique de chat (pour test)
-chat_history = []
-
-class MessageRequest(BaseModel):
-    message: str
-    sentiment: int  # 0 = négatif, 1 = positif
-
-def preprocess_text(text: str):
-    text = text.lower()  # Convertir en minuscules
-    text = re.sub(r'[^a-zA-Z\s]', '', text)  # Supprimer les caractères spéciaux
+# Fonction de prétraitement des textes
+def preprocess_text(text):
+    text = re.sub(r'\W+', ' ', text.lower())  # Suppression des caractères spéciaux
     doc = nlp(text)  # Lemmatisation
-    lemmatized_text = " ".join([token.lemma_ for token in doc])
-    words = lemmatized_text.split()
-    vectors = np.array([ft_model.get_word_vector(word) for word in words])
-    if len(vectors) > 0:
-        return np.mean(vectors, axis=0)  # Moyenne des vecteurs FastText
-    return np.zeros(300)
+    lemmatized_text = ' '.join([token.lemma_ for token in doc])
+    return lemmatized_text
 
+# Page d'accueil (GET request)
 @app.get("/")
-async def get_welcome_page(request: Request):
+async def home(request: fastapi.Request):
     return templates.TemplateResponse("welcome.html", {"request": request})
 
-@app.get("/continue")
-async def continue_to_chat():
-    return RedirectResponse("/chat")
-
-@app.get("/exit")
-async def exit_app():
-    return {"message": "Vous avez quitté l'application."}
-
+# Page de chat (GET request)
 @app.get("/chat")
-async def get_chat_page(request: Request):
+async def chat(request: fastapi.Request):
     return templates.TemplateResponse("chat.html", {"request": request})
 
-@app.get("/chat-history")
-async def get_chat_history():
-    return {"messages": chat_history}
-
-@app.post("/send-message")
-async def send_message(message: MessageRequest):
-    # Prétraiter le texte du message
-    processed_text = preprocess_text(message.message)
-    processed_text = np.expand_dims(np.expand_dims(processed_text, axis=0), axis=0)
-
-    # Prédire le sentiment avec le modèle
-    predicted_sentiment = model.predict(processed_text)
-    predicted_sentiment = int(predicted_sentiment > 0.5)
-
-    # Vérifier si le sentiment est correct
-    if predicted_sentiment == message.sentiment:
-        result = "L'IA a bien compris tes sentiments."
+# API pour traiter un message et prédire le sentiment (POST request)
+@app.post("/predict")
+async def predict(request: fastapi.Request, user: str = fastapi.Form(...), text: str = fastapi.Form(...), sentiment: str = fastapi.Form(...)):
+    # Prétraiter le texte
+    cleaned_text = preprocess_text(text)
+    
+    # Conversion via FastText et prédiction via le modèle LSTM
+    ft_vector = ft_model.get_sentence_vector(cleaned_text)
+    prediction = lstm_model.predict(np.array([ft_vector]))
+    
+    # Comparaison du résultat avec le sentiment indiqué
+    predicted_sentiment = "positif" if prediction[0][0] > 0.5 else "négatif"
+    if predicted_sentiment == sentiment:
+        return {"message": "J'ai bien compris tes sentiments."}
     else:
-        result = "Désolé, l'IA n'a pas bien compris tes sentiments."
+        return {"message": "Désolé, j'apprends encore, je n'ai pas bien compris tes sentiments."}
 
-    # Ajouter le message à l'historique des chats
-    chat_history.append({
-        "username": "User",
-        "message": message.message,
-        "sentiment": message.sentiment,
-        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    })
+# Redirection vers la page de chat après la page d'accueil
+@app.post("/redirect")
+async def redirect_to_chat():
+    return fastapi.responses.RedirectResponse(url="/chat")
 
-    return {"result": result}
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000)
