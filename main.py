@@ -1,3 +1,38 @@
+import os
+import subprocess
+import sys
+
+# Fonction pour installer les modules si non installés
+def install_package(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+# Installer FastAPI, Uvicorn, et autres dépendances critiques
+try:
+    import fastapi
+except ImportError:
+    install_package('fastapi')
+
+try:
+    import uvicorn
+except ImportError:
+    install_package('uvicorn')
+
+try:
+    import fasttext
+except ImportError:
+    install_package('fasttext')
+
+try:
+    import spacy
+except ImportError:
+    install_package('spacy')
+
+try:
+    import tensorflow as tf
+except ImportError:
+    install_package('tensorflow')
+
+# Maintenant, les modules sont installés, on peut les importer
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -9,36 +44,37 @@ import numpy as np
 from datetime import datetime
 import re
 
+# Initialisation de l'application FastAPI
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
-# Chargement du modèle FastText
+# Charger le modèle FastText
 ft_model = fasttext.load_model("./models/LSTM_plus_Lemmatization_plus_FastText_model.h5")
 
-# Endpoint pour la page d'accueil
+# Page d'accueil
 @app.get("/")
 async def home(request: Request):
     return templates.TemplateResponse("welcome.html", {"request": request})
 
-# Endpoint pour la page de chat
+# Page de chat
 @app.get("/chat")
 async def chat(request: Request):
     return templates.TemplateResponse("chat.html", {"request": request})
 
-# Modèle de données pour les requêtes
+# Modèle de données pour les tweets
 class TweetData(BaseModel):
     username: str
     message: str
     sentiment: int
 
-# Prétraitement du texte avec spaCy et FastText
+# Analyse du tweet
 @app.post("/analyze")
 async def analyze_tweet(tweet: TweetData):
-    # Traitement du texte ici avec spacy et fasttext
+    # Traitement du texte avec spaCy
     preprocessed_text = re.sub(r'[^\w\s]', '', tweet.message.lower())
     lemmatized_text = spacy.load('en_core_web_sm')(preprocessed_text).lemma_
-    
-    # Prédiction avec FastText et TensorFlow
+
+    # Prédiction avec FastText
     prediction = ft_model.predict(lemmatized_text)
 
     # Comparaison avec le sentiment attendu
@@ -46,5 +82,5 @@ async def analyze_tweet(tweet: TweetData):
         response = "J'ai bien compris tes sentiments."
     else:
         response = "Désolé, j'apprends encore, je n'ai pas bien compris tes sentiments."
-    
+
     return {"message": response}
