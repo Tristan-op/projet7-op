@@ -18,18 +18,19 @@ jobs:
       with:
         python-version: '3.11'
 
-    # Créer l'environnement virtuel et installer les dépendances
-    - name: Install dependencies from requirements.txt
+    # Créer et activer l'environnement virtuel, puis installer les dépendances dans le bon chemin
+    - name: Install dependencies in the correct virtual environment
       run: |
-        python -m venv .venv  # Créer l'environnement virtuel
-        . .venv/bin/activate  # Activer l'environnement virtuel
+        python -m venv /home/site/wwwroot/.venv  # Créer l'environnement virtuel au bon chemin
+        . /home/site/wwwroot/.venv/bin/activate  # Activer l'environnement virtuel
         python -m pip install --upgrade pip  # Mettre à jour pip
-        pip install -r requirements.txt  # Installer les dépendances
+        pip install -r requirements.txt  # Installer les dépendances depuis requirements.txt
+        pip freeze  # Vérifier que FastAPI et les autres dépendances sont bien installées
 
     # Télécharger et décompresser le modèle de machine learning
     - name: Download and unzip machine learning model
       run: |
-        . .venv/bin/activate
+        . /home/site/wwwroot/.venv/bin/activate  # Activer l'environnement virtuel
         curl -L -o model.zip https://raw.githubusercontent.com/Tristan-op/projet7-op/main/models/LSTM_plus_Lemmatization_plus_FastText_model.zip
         unzip model.zip -d ./models/
 
@@ -40,7 +41,7 @@ jobs:
         rm -f model.zip
         rm -rf cc.en.300.bin.zip
 
-    # Déployer sur Azure Web App avec l'action azure/webapps-deploy
+    # Déployer sur Azure Web App
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
