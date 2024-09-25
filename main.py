@@ -12,20 +12,6 @@ try:
 except ImportError:
     install_package('fastapi')
 
-try:
-    import uvicorn
-except ImportError:
-    install_package('uvicorn')
-
-try:
-    import spacy
-except ImportError:
-    install_package('spacy')
-
-try:
-    import tensorflow as tf
-except ImportError:
-    install_package('tensorflow')
 
 # Chemin vers le modèle FastText préentraîné
 fasttext_model_path = "./cc.fr.300.bin"
