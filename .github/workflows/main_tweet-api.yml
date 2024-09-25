@@ -24,7 +24,7 @@ jobs:
         python -m venv .venv  # Créer l'environnement virtuel
         . .venv/bin/activate  # Activer l'environnement virtuel
         python -m pip install --upgrade pip  # Mettre à jour pip
-        pip install fastapi==0.95.0 uvicorn==0.22.0 pydantic==1.10.2 spacy==3.5.1 tensorflow-intel==2.8.0 jinja2==3.1.2 numpy==1.21.0
+        pip install fastapi==0.95.0 uvicorn==0.22.0 pydantic==1.10.2 spacy==3.5.1 tensorflow==2.11.0 jinja2==3.1.2 numpy==1.21.0
 
     # Installer la version précompilée de FastText depuis GitHub
     - name: Install FastText precompiled
