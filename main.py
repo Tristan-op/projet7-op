@@ -13,28 +13,23 @@ except ImportError:
     install_package('fastapi')
 
 
-# Fonction pour installer fasttext depuis GitHub
-def install_fasttext_from_source():
-    try:
-        # Vérifier si git est disponible
-        subprocess.check_call(["git", "--version"])
-    except subprocess.CalledProcessError:
-        print("Git n'est pas installé sur ce système.")
-        return False
+# Télécharger et installer FastText précompilé
+def install_fasttext_from_binary():
+    print("Téléchargement de FastText précompilé...")
+    fasttext_bin_url = "https://github.com/facebookresearch/fastText/archive/v0.9.2.zip"
+    subprocess.run(["curl", "-L", "-o", "fasttext.zip", fasttext_bin_url])
 
-    # Cloner le dépôt de fasttext
-    if not os.path.exists("fasttext"):
-        print("Clonage du dépôt FastText depuis GitHub...")
-        subprocess.check_call(["git", "clone", "https://github.com/facebookresearch/fastText.git"])
+    # Extraire l'archive
+    subprocess.run(["unzip", "fasttext.zip"])
 
-    # Installer fasttext depuis les sources
-    try:
-        print("Installation de FastText...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "."])
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"Erreur lors de l'installation de fasttext: {e}")
-        return False
+    # Naviguer dans le répertoire extrait
+    os.chdir("fastText-0.9.2")
+
+    # Compiler et installer FastText manuellement
+    print("Compilation et installation de FastText...")
+    subprocess.run(["make"])
+
+    print("FastText installé avec succès.")
 
 # Chemin vers le modèle FastText préentraîné
 fasttext_model_path = "./cc.fr.300.bin"
@@ -43,9 +38,7 @@ fasttext_model_path = "./cc.fr.300.bin"
 try:
     import fasttext
 except ImportError:
-    if not install_fasttext_from_source():
-        print("Impossible d'installer FastText. Arrêt du programme.")
-        sys.exit(1)
+    install_fasttext_from_binary()
 
 # Étape 2: Télécharger le modèle FastText s'il n'est pas présent
 if not os.path.exists(fasttext_model_path):
@@ -81,9 +74,6 @@ import re
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
-# Charger le modèle FastText
-ft_model = fasttext.load_model(fasttext_model_path)
-
 # Charger le modèle LSTM (fichier .h5)
 lstm_model = tf.keras.models.load_model("./models/LSTM_plus_Lemmatization_plus_FastText_model.h5")
 
@@ -106,15 +96,21 @@ class TweetData(BaseModel):
 # Analyse du tweet
 @app.post("/analyze")
 async def analyze_tweet(tweet: TweetData):
-    # Traitement du texte avec spaCy
+    # Charger le modèle de langue spaCy pour l'anglais
+    nlp = spacy.load('en_core_web_sm')
+
+    # Prétraitement du texte avec suppression des caractères spéciaux et mise en minuscule
     preprocessed_text = re.sub(r'[^\w\s]', '', tweet.message.lower())
-    lemmatized_text = spacy.load('en_core_web_sm')(preprocessed_text).lemma_
+
+    # Lemmatisation du texte avec spaCy
+    doc = nlp(preprocessed_text)
+    lemmatized_text = " ".join([token.lemma_ for token in doc])
 
     # Prédiction avec FastText
-    prediction = ft_model.predict(lemmatized_text)
+    prediction, _ = ft_model.predict(lemmatized_text)
 
     # Comparaison avec le sentiment attendu
-    if prediction == tweet.sentiment:
+    if prediction[0] == str(tweet.sentiment):
         response = "J'ai bien compris tes sentiments."
     else:
         response = "Désolé, j'apprends encore, je n'ai pas bien compris tes sentiments."
