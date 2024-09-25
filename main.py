@@ -16,7 +16,15 @@ try:
     import gensim
 except ImportError:
     install_package('gensim')
+try:
+    import tensorflow as tf
+except ImportError:
+    install_package('tensorflow')
 
+try:
+    import spacy
+except ImportError:
+    install_package('spacy')
 import os
 import subprocess
 import sys
