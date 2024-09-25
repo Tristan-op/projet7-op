@@ -1,3 +1,25 @@
+import subprocess
+import sys
+
+def install_requirements():
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+    except Exception as e:
+        print(f"Erreur lors de l'installation des dépendances : {e}")
+
+# Appelez cette fonction au démarrage
+install_requirements()
+
+from fastapi import FastAPI, Request
+from fastapi.responses import RedirectResponse
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
+import spacy
+import fasttext
+import tensorflow as tf
+import numpy as np
+from datetime import datetime
+
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
