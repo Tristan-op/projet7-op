@@ -61,7 +61,10 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 # Charger le modèle FastText
-ft_model = fasttext.load_model("./models/LSTM_plus_Lemmatization_plus_FastText_model.h5")
+ft_model = fasttext.load_model(fasttext_model_path)
+
+# Charger le modèle LSTM (fichier .h5)
+lstm_model = tf.keras.models.load_model("./models/LSTM_plus_Lemmatization_plus_FastText_model.h5")
 
 # Page d'accueil
 @app.get("/")
