@@ -18,11 +18,6 @@ except ImportError:
     install_package('uvicorn')
 
 try:
-    import fasttext
-except ImportError:
-    install_package('fasttext')
-
-try:
     import spacy
 except ImportError:
     install_package('spacy')
