@@ -13,22 +13,57 @@ except ImportError:
     install_package('fastapi')
 
 
+# Fonction pour installer fasttext depuis GitHub
+def install_fasttext_from_source():
+    try:
+        # Vérifier si git est disponible
+        subprocess.check_call(["git", "--version"])
+    except subprocess.CalledProcessError:
+        print("Git n'est pas installé sur ce système.")
+        return False
+
+    # Cloner le dépôt de fasttext
+    if not os.path.exists("fasttext"):
+        print("Clonage du dépôt FastText depuis GitHub...")
+        subprocess.check_call(["git", "clone", "https://github.com/facebookresearch/fastText.git"])
+
+    # Installer fasttext depuis les sources
+    try:
+        print("Installation de FastText...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "."])
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Erreur lors de l'installation de fasttext: {e}")
+        return False
+
 # Chemin vers le modèle FastText préentraîné
 fasttext_model_path = "./cc.fr.300.bin"
 
-# Étape 1: Télécharger le modèle FastText s'il n'est pas présent
-if not os.path.exists(fasttext_model_path):
-    print(f"Téléchargement du modèle FastText vers {fasttext_model_path}...")
-    subprocess.run(
-        ["curl", "-o", fasttext_model_path + ".gz", "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.fr.300.bin.gz"]
-    )
-    subprocess.run(["gunzip", fasttext_model_path + ".gz"])  # Décompresser le fichier
-
-# Étape 2: Vérifier si FastText est installé, sinon l'installer
+# Étape 1: Télécharger et installer FastText s'il n'est pas installé
 try:
     import fasttext
 except ImportError:
-    install_package('fasttext')
+    if not install_fasttext_from_source():
+        print("Impossible d'installer FastText. Arrêt du programme.")
+        sys.exit(1)
+
+# Étape 2: Télécharger le modèle FastText s'il n'est pas présent
+if not os.path.exists(fasttext_model_path):
+    print(f"Téléchargement du modèle FastText vers {fasttext_model_path}...")
+    # Télécharger le modèle compressé
+    subprocess.run(
+        ["curl", "-o", fasttext_model_path + ".gz", "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.fr.300.bin.gz"]
+    )
+    # Décompresser le fichier téléchargé
+    subprocess.run(["gunzip", fasttext_model_path + ".gz"])
+    print(f"Modèle FastText téléchargé et décompressé à {fasttext_model_path}")
+
+# Charger le modèle FastText
+try:
+    ft_model = fasttext.load_model(fasttext_model_path)
+    print(f"Modèle FastText chargé depuis {fasttext_model_path}")
+except Exception as e:
+    print(f"Erreur lors du chargement du modèle FastText: {e}")
 
 # Maintenant, les modules sont installés, on peut les importer
 from fastapi import FastAPI, Request
