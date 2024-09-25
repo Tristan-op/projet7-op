@@ -18,24 +18,18 @@ jobs:
       with:
         python-version: '3.11'
 
-    # Créer et activer l'environnement virtuel, puis installer les dépendances via requirements.txt
-    - name: Install dependencies from requirements.txt (without fasttext)
+    # Créer l'environnement virtuel, activer, et installer les dépendances depuis requirements.txt
+    - name: Install dependencies from requirements.txt
       run: |
         python -m venv .venv  # Créer l'environnement virtuel
         . .venv/bin/activate  # Activer l'environnement virtuel
         python -m pip install --upgrade pip  # Mettre à jour pip
-        pip install -r requirements.txt  # Installer les dépendances du fichier requirements.txt
+        pip install -r requirements.txt  # Installer les dépendances
 
-    # Installer FastText après pybind11
-    - name: Install FastText precompiled
-      run: |
-        . .venv/bin/activate  # Activer l'environnement virtuel
-        pip install https://github.com/facebookresearch/fastText/archive/v0.9.2.zip
-
-    # Télécharger et décompresser le modèle de machine learning dans l'environnement virtuel
+    # Télécharger et décompresser le modèle de machine learning
     - name: Download and unzip machine learning model
       run: |
-        . .venv/bin/activate  # Activer l'environnement virtuel
+        . .venv/bin/activate
         curl -L -o model.zip https://raw.githubusercontent.com/Tristan-op/projet7-op/main/models/LSTM_plus_Lemmatization_plus_FastText_model.zip
         unzip model.zip -d ./models/
 
@@ -46,8 +40,11 @@ jobs:
         rm -f model.zip
         rm -rf cc.en.300.bin.zip
 
-    # Déployer sur Azure Web App
+    # Démarrer l'application avec Gunicorn dans l'environnement virtuel activé
     - name: Deploy to Azure Web App
+      run: |
+        . .venv/bin/activate
+        gunicorn --bind 0.0.0.0:$PORT main:app
       uses: azure/webapps-deploy@v2
       with:
         publish-profile: ${{ secrets.AZURE_API }}
