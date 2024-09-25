@@ -23,20 +23,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # Installation de FastAPI de la même manière que FastText
-    - name: Install FastAPI manually
-      run: |
-        pip install fastapi
-        pip install uvicorn
-
-    # Installation manuelle de FastText
-    - name: Install FastText manually
-      run: |
-        curl -L -o fasttext.tar.gz https://github.com/facebookresearch/fastText/archive/v0.9.2.tar.gz
-        tar -xzvf fasttext.tar.gz
-        cd fastText-0.9.2
-        pip install .
-      
+          
     - name: Download model
       run: |
         curl -L -o model.zip https://raw.githubusercontent.com/Tristan-op/projet7-op/main/models/LSTM_plus_Lemmatization_plus_FastText_model.zip

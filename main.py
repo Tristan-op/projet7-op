@@ -27,6 +27,22 @@ try:
 except ImportError:
     install_package('tensorflow')
 
+# Tentative de téléchargement de FastText et de son modèle préentraîné
+try:
+    import fasttext
+except ImportError:
+    install_package('fasttext')
+
+# Chemin vers le modèle FastText préentraîné
+fasttext_model_path = "./cc.fr.300.bin"
+
+# Télécharger le modèle FastText si nécessaire
+if not os.path.exists(fasttext_model_path):
+    subprocess.run(
+        ["curl", "-o", fasttext_model_path, "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.fr.300.bin.gz"]
+    )
+    subprocess.run(["gunzip", fasttext_model_path + ".gz"])  # Décompresser le fichier
+
 # Maintenant, les modules sont installés, on peut les importer
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
