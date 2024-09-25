@@ -13,66 +13,33 @@ except ImportError:
     install_package('fastapi')
 
 
-# Télécharger et installer FastText précompilé
-def install_fasttext_from_binary():
-    print("Téléchargement de FastText précompilé...")
-    fasttext_bin_url = "https://github.com/facebookresearch/fastText/archive/v0.9.2.zip"
-    subprocess.run(["curl", "-L", "-o", "fasttext.zip", fasttext_bin_url])
-
-    # Extraire l'archive
-    subprocess.run(["unzip", "fasttext.zip"])
-
-    # Naviguer dans le répertoire extrait
-    os.chdir("fastText-0.9.2")
-
-    # Compiler et installer FastText manuellement
-    print("Compilation et installation de FastText...")
-    subprocess.run(["make"])
-
-    print("FastText installé avec succès.")
-
-# Chemin vers le modèle FastText préentraîné
-fasttext_model_path = "./cc.fr.300.bin"
-
-# Étape 1: Télécharger et installer FastText s'il n'est pas installé
-try:
-    import fasttext
-except ImportError:
-    install_fasttext_from_binary()
-
-# Étape 2: Télécharger le modèle FastText s'il n'est pas présent
-if not os.path.exists(fasttext_model_path):
-    print(f"Téléchargement du modèle FastText vers {fasttext_model_path}...")
-    # Télécharger le modèle compressé
-    subprocess.run(
-        ["curl", "-o", fasttext_model_path + ".gz", "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.fr.300.bin.gz"]
-    )
-    # Décompresser le fichier téléchargé
-    subprocess.run(["gunzip", fasttext_model_path + ".gz"])
-    print(f"Modèle FastText téléchargé et décompressé à {fasttext_model_path}")
-
-# Charger le modèle FastText
-try:
-    ft_model = fasttext.load_model(fasttext_model_path)
-    print(f"Modèle FastText chargé depuis {fasttext_model_path}")
-except Exception as e:
-    print(f"Erreur lors du chargement du modèle FastText: {e}")
-
-# Maintenant, les modules sont installés, on peut les importer
+import os
+import subprocess
+import sys
+import gensim.downloader as api
+import numpy as np
+import spacy
+import tensorflow as tf
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-import spacy
-import fasttext
-import tensorflow as tf
-import numpy as np
-from datetime import datetime
 import re
 
 # Initialisation de l'application FastAPI
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
+
+# Charger le modèle FastText pré-entraîné via gensim (aucune installation de fasttext nécessaire)
+ft_model = api.load('fasttext-wiki-news-subwords-300')
+
+# Fonction pour créer la matrice d'embeddings à partir de FastText
+def create_embedding_matrix(tokenizer, embedding_model, embedding_dim=300):
+    embedding_matrix = np.zeros((len(tokenizer.word_index) + 1, embedding_dim))
+    for word, i in tokenizer.word_index.items():
+        if word in embedding_model:
+            embedding_matrix[i] = embedding_model[word]
+    return embedding_matrix
 
 # Charger le modèle LSTM (fichier .h5)
 lstm_model = tf.keras.models.load_model("./models/LSTM_plus_Lemmatization_plus_FastText_model.h5")
@@ -96,21 +63,28 @@ class TweetData(BaseModel):
 # Analyse du tweet
 @app.post("/analyze")
 async def analyze_tweet(tweet: TweetData):
-    # Charger le modèle de langue spaCy pour l'anglais
-    nlp = spacy.load('en_core_web_sm')
-
-    # Prétraitement du texte avec suppression des caractères spéciaux et mise en minuscule
+    # Étape 1: Mettre en minuscules et supprimer les caractères spéciaux
     preprocessed_text = re.sub(r'[^\w\s]', '', tweet.message.lower())
 
-    # Lemmatisation du texte avec spaCy
+    # Étape 2: Lemmatisation avec spaCy
+    nlp = spacy.load('en_core_web_sm')
     doc = nlp(preprocessed_text)
-    lemmatized_text = " ".join([token.lemma_ for token in doc])
+    lemmatized_text = ' '.join([token.lemma_ for token in doc])
 
-    # Prédiction avec FastText
-    prediction, _ = ft_model.predict(lemmatized_text)
+    # Étape 3: Création de la matrice d'embeddings FastText
+    words = lemmatized_text.split()  # Séparer en tokens
+    embedding_matrix = np.zeros((len(words), 300))  # 300 dimensions pour FastText
+    for idx, word in enumerate(words):
+        if word in ft_model:
+            embedding_matrix[idx] = ft_model[word]
+        else:
+            embedding_matrix[idx] = np.zeros(300)  # Mot non trouvé dans FastText
+
+    # Étape 4: Utiliser le modèle LSTM pour la prédiction
+    prediction = lstm_model.predict(np.array([embedding_matrix]))  # Ajuster selon la forme du modèle LSTM
 
     # Comparaison avec le sentiment attendu
-    if prediction[0] == str(tweet.sentiment):
+    if prediction == tweet.sentiment:
         response = "J'ai bien compris tes sentiments."
     else:
         response = "Désolé, j'apprends encore, je n'ai pas bien compris tes sentiments."
