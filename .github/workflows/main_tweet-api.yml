@@ -20,22 +20,20 @@ jobs:
 
     - name: Install dependencies
       run: |
+        python -m venv .venv
+        . .venv/bin/activate
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
     - name: Download FastText model
       run: |
         python -c "import fasttext.util; fasttext.util.download_model('en', if_exists='ignore')"
+        mv cc.en.300.bin ./models/
 
     - name: Download and unzip machine learning model from GitHub
       run: |
         curl -L -o model.zip https://raw.githubusercontent.com/Tristan-op/projet7-op/main/models/LSTM_plus_Lemmatization_plus_FastText_model.zip
         unzip model.zip -d ./models/
-
-    - name: Clean up
-      run: |
-        rm -f model.zip
-        rm -f cc.en.300.bin.zip
 
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2

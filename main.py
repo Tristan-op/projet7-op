@@ -1,15 +1,3 @@
-import subprocess
-import sys
-
-def install_requirements():
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
-    except Exception as e:
-        print(f"Erreur lors de l'installation des dépendances : {e}")
-
-# Appelez cette fonction au démarrage
-install_requirements()
-
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -19,18 +7,7 @@ import fasttext
 import tensorflow as tf
 import numpy as np
 from datetime import datetime
-
-from fastapi import FastAPI, Request, Form
-from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
-import spacy
-import fasttext.util
-import tensorflow as tf
-import numpy as np
-import os
-from datetime import datetime
-import zipfile
+import re
 
 # Initialiser l'application FastAPI
 app = FastAPI()
@@ -38,22 +15,10 @@ app = FastAPI()
 # Configuration des templates
 templates = Jinja2Templates(directory="template")
 
-# Chemin du fichier zip
-zip_path = "./models/LSTM_plus_Lemmatization_plus_FastText_model.zip"
-extract_path = "./models/LSTM_plus_Lemmatization_plus_FastText_model/"
-
-# Décompresser le fichier .zip si ce n'est pas déjà fait
-if not os.path.exists(extract_path):
-    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        zip_ref.extractall(extract_path)
-    print("Modèle décompressé avec succès.")
-
 # Charger le modèle TensorFlow
-model = tf.keras.models.load_model("./models/LSTM_plus_Lemmatization_plus_FastText_model/LSTM_plus_Lemmatization_plus_FastText_model.h5")
+model = tf.keras.models.load_model("./models/LSTM_plus_Lemmatization_plus_FastText_model.h5")
 
-# Télécharger et charger FastText (en anglais)
-if not os.path.exists("cc.en.300.bin"):
-    fasttext.util.download_model('en', if_exists='ignore')
+# Charger le modèle FastText
 ft_model = fasttext.load_model("cc.en.300.bin")
 
 # Charger SpaCy pour la lemmatisation anglaise
