@@ -1,4 +1,4 @@
-name: Azure Web App Deployment
+name: Deploy FastAPI app to Azure
 
 on:
   push:
@@ -6,51 +6,34 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    # Étape 1 : Vérifier le code source
-    - name: Checkout code
+    - name: Check out the repository
       uses: actions/checkout@v2
 
-    # Étape 2 : Configurer Python 3.11
-    - name: Set up Python 3.11
+    - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.11'
 
-    # Étape 3 : Créer et activer un environnement virtuel avec Python 3.11
-    - name: Create virtual environment with Python 3.11
+    - name: Install dependencies
       run: |
-        /opt/hostedtoolcache/Python/3.11.9/x64/bin/python3 -m venv .venv  # Utiliser explicitement Python 3.11
-        . .venv/bin/activate  # Activer l'environnement virtuel avec Python 3.11
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
-        
-   # Étape 5 : Télécharger le modèle FastText (si nécessaire)
     - name: Download FastText model
       run: |
-        . .venv/bin/activate  # Activer l'environnement virtuel avec Python 3.11
-        wget -P ./modèle https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.fr.300.bin.gz
-        gunzip ./modèle/cc.fr.300.bin.gz  # Décompresser le modèle FastText
+        python -c "import fasttext.util; fasttext.util.download_model('en', if_exists='ignore')"
 
-    # Étape 5 : Vérifier la version de Python
-    - name: Verify Python version
-      run: |
-        . .venv/bin/activate
-        python --version
+    - name: Zip FastText model
+      run: zip -r cc.en.300.bin.zip cc.en.300.bin
 
-
-  
-    # Étape 6 : Connexion à Azure
-    - name: Azure Login
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-    # Étape 7 : Déployer sur Azure Web App
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'tweet-api'
-        publish-profile: ${{ secrets.AZURE_API }}
+        publish-profile: ${{ secrets.AZURE_API }
+
+        }
