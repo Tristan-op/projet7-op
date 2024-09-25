@@ -18,7 +18,7 @@ jobs:
       with:
         python-version: '3.11'
 
-    # Créer l'environnement virtuel, activer, et installer les dépendances depuis requirements.txt
+    # Créer l'environnement virtuel et installer les dépendances
     - name: Install dependencies from requirements.txt
       run: |
         python -m venv .venv  # Créer l'environnement virtuel
@@ -40,11 +40,8 @@ jobs:
         rm -f model.zip
         rm -rf cc.en.300.bin.zip
 
-    # Démarrer l'application avec Gunicorn dans l'environnement virtuel activé
+    # Déployer sur Azure Web App avec l'action azure/webapps-deploy
     - name: Deploy to Azure Web App
-      run: |
-        . .venv/bin/activate
-        gunicorn --bind 0.0.0.0:$PORT main:app
       uses: azure/webapps-deploy@v2
       with:
         publish-profile: ${{ secrets.AZURE_API }}
