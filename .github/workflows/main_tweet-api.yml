@@ -19,12 +19,18 @@ jobs:
         python-version: '3.11'
 
     # Créer et activer l'environnement virtuel, puis installer les dépendances via requirements.txt
-    - name: Install dependencies from requirements.txt
+    - name: Install dependencies from requirements.txt (without fasttext)
       run: |
         python -m venv .venv  # Créer l'environnement virtuel
         . .venv/bin/activate  # Activer l'environnement virtuel
         python -m pip install --upgrade pip  # Mettre à jour pip
-        pip install -r requirements.txt  # Installer les dépendances
+        pip install -r requirements.txt  # Installer les dépendances du fichier requirements.txt
+
+    # Installer FastText après pybind11
+    - name: Install FastText precompiled
+      run: |
+        . .venv/bin/activate  # Activer l'environnement virtuel
+        pip install https://github.com/facebookresearch/fastText/archive/v0.9.2.zip
 
     # Télécharger et décompresser le modèle de machine learning dans l'environnement virtuel
     - name: Download and unzip machine learning model
