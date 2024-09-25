@@ -17,7 +17,6 @@ try:
 except ImportError:
     install_package('gensim')
 
-
 import os
 import subprocess
 import sys
