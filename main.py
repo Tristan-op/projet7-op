@@ -11,6 +11,10 @@ try:
     import fastapi
 except ImportError:
     install_package('fastapi')
+try:
+    import uvicorn
+except ImportError:
+    install_package('uvicorn')
 
 try:
     import gensim
