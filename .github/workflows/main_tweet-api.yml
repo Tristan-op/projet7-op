@@ -39,6 +39,3 @@ jobs:
         publish-profile: ${{ secrets.AZURE_API }}
         package: .
 
-    - name: Run startup script
-      run: |
-        bash ./startup.sh
