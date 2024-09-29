@@ -3,7 +3,6 @@ uvicorn
 gensim
 tensorflow
 spacy
-en-core-web-sm
 numpy
 pydantic
 jinja2
