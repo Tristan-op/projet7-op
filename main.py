@@ -1,5 +1,34 @@
 import os
-import re
+import subprocess
+import sys
+
+# Fonction pour installer les modules si non installés
+def install_package(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+# Installer FastAPI, Uvicorn, et autres dépendances critiques
+try:
+    import fastapi
+except ImportError:
+    install_package('fastapi')
+
+try:
+    import gensim
+except ImportError:
+    install_package('gensim')
+try:
+    import tensorflow as tf
+except ImportError:
+    install_package('tensorflow')
+
+try:
+    import spacy
+except ImportError:
+    install_package('spacy')
+import os
+import subprocess
+import sys
+import gensim.downloader as api
 import numpy as np
 import spacy
 import tensorflow as tf
@@ -7,7 +36,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-import gensim.downloader as api
+import re
 
 # Initialisation de l'application FastAPI
 app = FastAPI()
@@ -47,7 +76,7 @@ class TweetData(BaseModel):
 @app.post("/analyze")
 async def analyze_tweet(tweet: TweetData):
     # Étape 1: Mettre en minuscules et supprimer les caractères spéciaux
-    preprocessed_text = re.sub(r'[^\\w\\s]', '', tweet.message.lower())
+    preprocessed_text = re.sub(r'[^\w\s]', '', tweet.message.lower())
 
     # Étape 2: Lemmatisation avec spaCy
     nlp = spacy.load('en_core_web_sm')
@@ -73,3 +102,5 @@ async def analyze_tweet(tweet: TweetData):
         response = "Désolé, j'apprends encore, je n'ai pas bien compris tes sentiments."
 
     return {"message": response}
+
+uvicorn main:app --host 0.0.0.0 --port 8000
