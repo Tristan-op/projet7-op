@@ -7,3 +7,4 @@ gensim==4.3.3  # Pour charger Word2Vec et FastText via gensim
 jinja2==3.1.2
 numpy
 scipy==1.10.1  # Ajoutez une version compatible de SciPy
+uvicorn
