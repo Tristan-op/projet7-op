@@ -23,7 +23,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-          
+    - name: Install spaCy model
+      run: |
+        python -m spacy download en_core_web_sm
+    
     - name: Download model
       run: |
         curl -L -o model.zip https://raw.githubusercontent.com/Tristan-op/projet7-op/main/models/LSTM_plus_Lemmatization_plus_FastText_model.zip
@@ -35,3 +38,7 @@ jobs:
         app-name: 'tweet-api'
         publish-profile: ${{ secrets.AZURE_API }}
         package: .
+
+    - name: Run startup script
+      run: |
+        bash ./startup.sh
