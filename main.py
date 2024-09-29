@@ -12,9 +12,9 @@ try:
 except ImportError:
     install_package('fastapi')
 try:
-    import uvicorn
+    import gunicorn
 except ImportError:
-    install_package('uvicorn')
+    install_package('gunicorn')
 
 try:
     import gensim
@@ -36,7 +36,7 @@ import gensim.downloader as api
 import numpy as np
 import spacy
 import tensorflow as tf
-import uvicorn
+import gunicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
