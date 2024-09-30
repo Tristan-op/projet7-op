@@ -6,12 +6,14 @@
     <title>Chat</title>
     <script>
         function checkForm() {
+            const username = document.getElementById('username').value;
             const message = document.getElementById('messageContent').value;
             const sentiment = document.querySelector('input[name="sentiment"]:checked');
-            document.getElementById('submitBtn').disabled = !(message && sentiment);
+            document.getElementById('submitBtn').disabled = !(username && message && sentiment);
         }
 
         function sendMessage() {
+            const username = document.getElementById('username').value;
             const message = document.getElementById('messageContent').value;
             const sentiment = document.querySelector('input[name="sentiment"]:checked').value;
 
@@ -20,7 +22,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ message, sentiment })
+                body: JSON.stringify({ username, message, sentiment })
             })
             .then(response => response.json())
             .then(data => {
@@ -55,13 +57,16 @@
 
     <!-- Formulaire d'envoi de message -->
     <form id="messageForm">
+        <label for="username">Nom d'utilisateur :</label>
+        <input type="text" id="username" name="username" oninput="checkForm()" required><br><br>
+
         <label for="messageContent">Message :</label>
-        <textarea id="messageContent" name="message" rows="4" cols="50" oninput="checkForm()"></textarea><br><br>
+        <textarea id="messageContent" name="message" rows="4" cols="50" oninput="checkForm()" required></textarea><br><br>
 
         <label for="sentiment">Sentiment :</label><br>
-        <input type="radio" id="positif" name="sentiment" value="1" onclick="checkForm()">
+        <input type="radio" id="positif" name="sentiment" value="1" onclick="checkForm()" required>
         <label for="positif">Positif</label><br>
-        <input type="radio" id="negatif" name="sentiment" value="0" onclick="checkForm()">
+        <input type="radio" id="negatif" name="sentiment" value="0" onclick="checkForm()" required>
         <label for="negatif">Négatif</label><br><br>
 
         <button type="button" id="submitBtn" disabled onclick="sendMessage()">Envoyer</button>
