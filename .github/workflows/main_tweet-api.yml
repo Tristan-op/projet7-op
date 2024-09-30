@@ -18,11 +18,11 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Make startup.sh executable
-      run: chmod +x ./startup.sh  # Étape ajoutée pour rendre startup.sh exécutable
-
-    - name: Run startup.sh
-      run: ./startup.sh
+    - name: Install dependencies from requirements.txt
+      run: |
+        echo "Installing dependencies from requirements.txt..."
+        pip install --upgrade pip
+        pip install -r requirements.txt
 
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
