@@ -22,6 +22,11 @@ jobs:
     - name: Make startup.sh executable
       run: chmod +x ./startup.sh
 
+    # Exécuter le script startup.sh après le déploiement
+    - name: Run startup.sh
+      run: ./startup.sh
+
+
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
@@ -29,9 +34,6 @@ jobs:
         publish-profile: ${{ secrets.AZURE_API }}
         package: ..
 
-    # Exécuter le script startup.sh après le déploiement
-    - name: Run startup.sh
-      run: ./startup.sh
 
 
 
