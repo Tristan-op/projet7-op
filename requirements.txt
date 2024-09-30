@@ -1,10 +1,8 @@
-fastapi==0.95.0
-uvicorn==0.22.0
-pydantic==1.10.2
+Flask==2.3.2
+gunicorn==20.1.0
+gensim==4.3.3
 tensorflow==2.12.0
 spacy==3.5.1
-gensim==4.3.3  # Pour charger Word2Vec et FastText via gensim
 jinja2==3.1.2
 numpy
 scipy==1.10.1  # Ajoutez une version compatible de SciPy
-gunicorn

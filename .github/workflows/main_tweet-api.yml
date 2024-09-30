@@ -1,12 +1,12 @@
-name: build-and-deploy
+name: Deploy Flask API
 
 on:
   push:
     branches:
-      - main
+      - main  # Déclencher le déploiement sur chaque push sur la branche principale
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,19 +23,14 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Install spaCy model
-      run: |
-        python -m spacy download en_core_web_sm
-    
-    - name: Download model
-      run: |
-        curl -L -o model.zip https://raw.githubusercontent.com/Tristan-op/projet7-op/main/models/LSTM_plus_Lemmatization_plus_FastText_model.zip
-        unzip model.zip -d ./models
-
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
-        app-name: 'tweet-api'
-        publish-profile: ${{ secrets.AZURE_API }}
+        app-name: 'tweet-api'  # Nom de l'application Azure Web App
+        slot-name: 'production'
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: .
 
+    - name: Start Gunicorn server
+      run: |
+        gunicorn --bind 0.0.0.0:$PORT main:app
