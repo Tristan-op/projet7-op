@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, render_template, redirect, url_for
+from flask import Flask, jsonify, request, render_template
 from datetime import datetime
 
 app = Flask(__name__, template_folder="templates")
@@ -10,45 +10,42 @@ messages = []
 def home():
     return render_template("welcome.html")
 
-# Route pour rediriger vers la page chat lorsque l'utilisateur clique sur "OK"
 @app.route('/continue', methods=['GET'])
 def continue_to_chat():
-    return redirect(url_for('chat'))
+    return render_template("chat.html")
 
-# Route pour quitter l'application (ferme simplement la fenêtre ou redirige)
 @app.route('/exit', methods=['GET'])
 def exit_app():
-    
-return "Application terminée. Merci d'avoir utilisé notre service."
+    return "L'application est fermée."
 
 @app.route('/chat', methods=['GET'])
 def chat():
-    return render_template("chat.html")
+    return render_template("chat.html", messages=messages)
 
-# Route pour gérer l'envoi de message
 @app.route('/send-message', methods=['POST'])
 def send_message():
-    data = request.json
-    username = data.get('username')
-    message = data.get('message')
-    sentiment = data.get('sentiment')
+    data = request.get_json()
 
-    if not username or not message or sentiment is None:
-        return jsonify({"result": "Tous les champs doivent être remplis"}), 400
+    # Vérification que toutes les données sont présentes
+    if 'username' in data and 'message' in data and 'sentiment' in data:
+        username = data['username']
+        message = data['message']
+        sentiment = data['sentiment']
+        
+        # Stocker les messages dans la liste avec les informations de temps
+        messages.append({
+            'username': username,
+            'message': message,
+            'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'sentiment': sentiment
+        })
 
-    # Stocker le message dans la "base de données" (liste Python pour l'instant)
-    messages.append({
-        'username': username,
-        'message': message,
-        'sentiment': sentiment,
-        'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    })
-    return jsonify({"result": "Message envoyé avec succès"})
+        return jsonify({'result': 'Message envoyé avec succès !'}), 200
+    else:
+        return jsonify({'result': 'Erreur lors de l\'envoi du message'}), 400
 
-# Route pour récupérer l'historique du chat
 @app.route('/chat-history', methods=['GET'])
 def chat_history():
-    return jsonify({"messages": messages})
-
-
+    # Retourner tous les messages stockés sans le sentiment
+    return jsonify({'messages': [{'username': msg['username'], 'message': msg['message'], 'time': msg['time']} for msg in messages]})
 
