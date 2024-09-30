@@ -4,76 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat</title>
-    <style>
-        /* Styles pour l'espace conversationnel */
-        #chatHistory {
-            width: 100%;
-            height: 300px;
-            border: 1px solid #ccc;
-            overflow-y: auto;
-            margin-bottom: 20px;
-            padding: 10px;
-            background-color: #f9f9f9;
-        }
-
-        /* Styles pour le formulaire */
-        .form-container {
-            display: flex;
-            align-items: center;
-        }
-
-        .form-container input[type="text"],
-        .form-container textarea {
-            margin-right: 10px;
-            width: 20%;
-        }
-
-        .form-container textarea {
-            flex-grow: 1;
-        }
-
-        .form-container label {
-            margin-right: 5px;
-        }
-
-        .form-container .sentiment-options {
-            margin-right: 10px;
-        }
-
-        .form-container button {
-            margin-left: 10px;
-        }
-
-        /* Styles pour les messages */
-        .message {
-            padding: 5px;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .message strong {
-            color: #333;
-        }
-
-        .message time {
-            color: #777;
-            font-size: 0.9em;
-        }
-    </style>
     <script>
+        let isSending = false;  // Variable pour suivre l'état d'envoi du message
+
         function checkForm() {
             const username = document.getElementById('username').value;
             const message = document.getElementById('messageContent').value;
             const sentiment = document.querySelector('input[name="sentiment"]:checked');
-            document.getElementById('submitBtn').disabled = !(username && message && sentiment);
+            document.getElementById('submitBtn').disabled = !(username && message && sentiment) || isSending;
         }
 
         function sendMessage() {
+            if (isSending) return; // Ne pas envoyer si une requête est déjà en cours
+
             const username = document.getElementById('username').value;
             const message = document.getElementById('messageContent').value;
             const sentiment = document.querySelector('input[name="sentiment"]:checked').value;
 
-            // Envoyer les données au serveur
+            // Désactiver le bouton d'envoi pendant la requête
+            isSending = true;
+            document.getElementById('submitBtn').disabled = true;
+
             fetch('/send-message', {
                 method: 'POST',
                 headers: {
@@ -83,23 +34,15 @@
             })
             .then(response => response.json())
             .then(data => {
-                // Ajouter le nouveau message directement dans la zone de chat
-                const chatHistory = document.getElementById('chatHistory');
-                const newMessage = `
-                    <div class="message">
-                        <strong>${username}</strong>: ${message}
-                    </div>`;
-                chatHistory.innerHTML += newMessage;
-
-                // Faire défiler l'historique jusqu'au bas
-                chatHistory.scrollTop = chatHistory.scrollHeight;
-
-                // Réinitialiser le formulaire
-                document.getElementById('messageForm').reset();
-                document.getElementById('submitBtn').disabled = true;
+                alert(data.result);
+                loadChatHistory();
             })
             .catch(error => {
                 alert('Erreur lors de l\'envoi du message');
+            })
+            .finally(() => {
+                isSending = false;  // Réactiver l'envoi une fois la réponse reçue
+                checkForm();  // Vérifier de nouveau si les champs sont remplis
             });
         }
 
@@ -110,10 +53,7 @@
                 const chatHistory = document.getElementById('chatHistory');
                 chatHistory.innerHTML = '';
                 data.messages.forEach(msg => {
-                    chatHistory.innerHTML += `
-                        <div class="message">
-                            <strong>${msg.username}</strong> (${msg.time}): ${msg.message}
-                        </div>`;
+                    chatHistory.innerHTML += `<p><strong>${msg.username}</strong> (${msg.time}): ${msg.message}</p>`;
                 });
             });
         }
@@ -124,26 +64,29 @@
 <body>
     <h1>Chat</h1>
 
-    <!-- Espace conversationnel pour les messages -->
+    <!-- Historique des messages -->
     <div id="chatHistory"></div>
 
     <!-- Formulaire d'envoi de message -->
-    <form id="messageForm" class="form-container">
+    <form id="messageForm">
         <label for="username">Nom d'utilisateur :</label>
-        <input type="text" id="username" name="username" oninput="checkForm()">
+        <input type="text" id="username" name="username" oninput="checkForm()"><br><br>
 
         <label for="messageContent">Message :</label>
-        <textarea id="messageContent" name="message" rows="2" oninput="checkForm()"></textarea>
+        <textarea id="messageContent" name="message" rows="4" cols="50" oninput="checkForm()"></textarea><br><br>
 
-        <div class="sentiment-options">
-            <label>Sentiment :</label>
-            <input type="radio" id="positif" name="sentiment" value="1" onclick="checkForm()">
-            <label for="positif">Positif</label>
-            <input type="radio" id="negatif" name="sentiment" value="0" onclick="checkForm()">
-            <label for="negatif">Négatif</label>
-        </div>
+        <label for="sentiment">Sentiment :</label><br>
+        <input type="radio" id="positif" name="sentiment" value="1" onclick="checkForm()">
+        <label for="positif">Positif</label><br>
+        <input type="radio" id="negatif" name="sentiment" value="0" onclick="checkForm()">
+        <label for="negatif">Négatif</label><br><br>
 
         <button type="button" id="submitBtn" disabled onclick="sendMessage()">Envoyer</button>
+    </form>
+
+    <!-- Bouton Exit placé en bas de la page -->
+    <form action="/exit" method="POST">
+        <button type="submit" style="margin-top: 20px;">Exit</button>
     </form>
 </body>
 </html>
