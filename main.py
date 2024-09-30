@@ -1,6 +1,79 @@
 import subprocess
 import sys
 
+# Fonction pour installer un package manuellement si non installé
+def install_package(package, version=None):
+    if version:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", f"{package}=={version}"])
+    else:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+# Installation de Flask
+try:
+    import flask
+except ImportError:
+    install_package('Flask', '2.3.2')
+
+# Installation de Werkzeug
+try:
+    import werkzeug
+except ImportError:
+    install_package('Werkzeug', '2.3.3')
+
+# Installation de Jinja2
+try:
+    import jinja2
+except ImportError:
+    install_package('Jinja2', '3.1.2')
+
+# Installation de itsdangerous
+try:
+    import itsdangerous
+except ImportError:
+    install_package('itsdangerous', '2.1.2')
+
+# Installation de Click
+try:
+    import click
+except ImportError:
+    install_package('click', '8.1.3')
+
+# Installation de TensorFlow
+try:
+    import tensorflow as tf
+except ImportError:
+    install_package('tensorflow', '2.12.0')
+
+# Installation de Gensim
+try:
+    import gensim
+except ImportError:
+    install_package('gensim', '4.3.1')
+
+# Installation de spaCy
+try:
+    import spacy
+except ImportError:
+    install_package('spacy', '3.5.1')
+
+# Installation de NumPy
+try:
+    import numpy
+except ImportError:
+    install_package('numpy', '1.23.5')
+
+# Installation de Gunicorn
+try:
+    import gunicorn
+except ImportError:
+    install_package('gunicorn', '20.1.0')
+
+# Installation de SciPy (si tu prévois de l'utiliser)
+try:
+    import scipy
+except ImportError:
+    install_package('scipy', '1.10.0')
+
 
 
 
