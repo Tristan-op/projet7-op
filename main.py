@@ -1,11 +1,21 @@
+import subprocess
+import sys
+import os
+
+# Vérifier si requirements.txt existe
+if os.path.exists('requirements.txt'):
+    try:
+        print("Installation des dépendances à partir de requirements.txt...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+        print("Dépendances installées avec succès.")
+    except Exception as e:
+        print(f"Erreur lors de l'installation des dépendances : {e}")
+else:
+    print("Le fichier requirements.txt n'existe pas.")
+
 from flask import Flask, jsonify, request, render_template
 from datetime import datetime
-try:
-    import numpy as np
-    print("Numpy is installed and imported successfully!")
-except ImportError as e:
-    print(f"Error importing numpy: {str(e)}")
-
+import numpy as np
 import tensorflow as tf
 import re
 import spacy
