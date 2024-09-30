@@ -31,22 +31,33 @@ def send_message():
         message = data['message']
         sentiment = data['sentiment']
 
-        # Pour l'instant, on ne fait que stocker le message
-        response = "Message reçu."
+        # Prétraitement du message (désactivé pour le moment)
+        # preprocessed_message = preprocess_text(message)
 
-        # Stocker les messages dans la liste avec les informations de temps
+        # Embedding FastText (désactivé pour le moment)
+        # words = preprocessed_message.split()
+        # embedding_matrix = create_embedding_matrix(words, ft_model)
+
+        # Utiliser le modèle LSTM pour la prédiction (désactivé pour le moment)
+        # prediction = lstm_model.predict(np.array([embedding_matrix]))  # Adapter la forme si nécessaire
+
+        # Simulation de la prédiction pour l'exemple (0 pour négatif, 1 pour positif)
+        predicted_sentiment = sentiment  # Placeholder pour le vrai résultat de la prédiction
+
+        # Stocker les messages dans la liste avec les informations de temps, sentiment et prédiction
         messages.append({
             'username': username,
             'message': message,
-            'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'sentiment': sentiment
+            'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),  # Enregistrement de l'heure
+            'sentiment': sentiment,  # Sentiment fourni par l'utilisateur
+            'prediction': predicted_sentiment  # Prédiction simulée pour le moment
         })
 
-        return jsonify({'result': response}), 200
+        return jsonify({'result': "Message reçu."}), 200
     else:
         return jsonify({'result': 'Erreur lors de l\'envoi du message'}), 400
 
-@app.route('/chat-history', methods=['GET'])
+        return jsonify({'result': 'Erreur lors de l\'envoi du message'}), 400@app.route('/chat-history', methods=['GET'])
 def chat_history():
     return jsonify({'messages': [{'username': msg['username'], 'message': msg['message'], 'time': msg['time']} for msg in messages]})
 

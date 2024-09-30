@@ -3,36 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administration - Liste des messages</title>
+    <title>Vue Administrateur</title>
 </head>
 <body>
-    <h1>Administration - Liste des messages</h1>
-
+    <h1>Liste des messages</h1>
     <table border="1">
         <thead>
             <tr>
                 <th>Nom d'utilisateur</th>
                 <th>Message</th>
+                <th>Sentiment</th>
+                <th>Prédiction</th>
                 <th>Heure</th>
             </tr>
         </thead>
         <tbody>
-            <!-- Boucle pour afficher les messages -->
-            {% for message in messages %}
+            {% for msg in messages %}
             <tr>
-                <td>{{ message['username'] }}</td>
-                <td>{{ message['message'] }}</td>
-                <td>{{ message['time'] }}</td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="3">Aucun message trouvé</td>
+                <td>{{ msg.username }}</td>
+                <td>{{ msg.message }}</td>
+                <td>{{ 'Positif' if msg.sentiment == 1 else 'Négatif' }}</td>
+                <td>{{ 'Positif' if msg.prediction == 1 else 'Négatif' }}</td>
+                <td>{{ msg.time }}</td>  <!-- Affichage de l'heure -->
             </tr>
             {% endfor %}
         </tbody>
     </table>
-
-    <br>
-    <a href="/">Retour à la page d'accueil</a>
 </body>
 </html>
