@@ -1,6 +1,11 @@
 from flask import Flask, jsonify, request, render_template
 from datetime import datetime
-import numpy as np
+try:
+    import numpy as np
+    print("Numpy is installed and imported successfully!")
+except ImportError as e:
+    print(f"Error importing numpy: {str(e)}")
+
 import tensorflow as tf
 import re
 import spacy
