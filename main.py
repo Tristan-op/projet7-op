@@ -1,5 +1,10 @@
 from flask import Flask, jsonify, request, render_template
 from datetime import datetime
+import numpy as np
+import tensorflow as tf
+import re
+import spacy
+import gensim.downloader as api
 
 app = Flask(__name__, template_folder="templates")
 
@@ -22,6 +27,27 @@ def exit_app():
 def chat():
     return render_template("chat.html", messages=messages)
 
+# Prétraitement du texte : lemmatisation, nettoyage des caractères spéciaux, etc.
+def preprocess_text(text):
+    # Convertir en minuscules et supprimer les caractères spéciaux
+    text = re.sub(r'[^\w\s]', '', text.lower())
+    
+    # Lemmatisation avec spaCy
+    doc = nlp(text)
+    lemmatized_text = ' '.join([token.lemma_ for token in doc])
+    
+    return lemmatized_text
+
+# Créer la matrice d'embedding avec FastText
+def create_embedding_matrix(words, embedding_model, embedding_dim=300):
+    embedding_matrix = np.zeros((len(words), embedding_dim))
+    for idx, word in enumerate(words):
+        if word in embedding_model:
+            embedding_matrix[idx] = embedding_model[word]
+        else:
+            embedding_matrix[idx] = np.zeros(embedding_dim)
+    return embedding_matrix
+
 @app.route('/send-message', methods=['POST'])
 def send_message():
     data = request.get_json()
@@ -31,6 +57,24 @@ def send_message():
         message = data['message']
         sentiment = data['sentiment']
 
+        # Prétraitement du message
+        preprocessed_message = preprocess_text(message)
+
+        # Embedding FastText
+        words = preprocessed_message.split()
+        embedding_matrix = create_embedding_matrix(words, ft_model)
+
+        # Utiliser le modèle LSTM pour la prédiction
+        prediction = lstm_model.predict(np.array([embedding_matrix]))  # Adapter la forme si nécessaire
+
+        # Comparaison avec le sentiment attendu
+        predicted_sentiment = 1 if prediction[0][0] > 0.5 else 0  # Seuil pour définir positif/négatif
+
+        if predicted_sentiment == sentiment:
+            response = "J'ai bien compris tes sentiments."
+        else:
+            response = "Désolé, j'apprends encore, je n'ai pas bien compris tes sentiments."
+
         # Stocker les messages dans la liste avec les informations de temps
         messages.append({
             'username': username,
@@ -39,17 +83,15 @@ def send_message():
             'sentiment': sentiment
         })
 
-        return jsonify({'result': "Message reçu."}), 200
+        return jsonify({'result': response}), 200
     else:
         return jsonify({'result': 'Erreur lors de l\'envoi du message'}), 400
 
 @app.route('/chat-history', methods=['GET'])
 def chat_history():
-    # Renvoie l'historique des messages sans le sentiment (pour l'affichage dans le chat)
     return jsonify({'messages': [{'username': msg['username'], 'message': msg['message'], 'time': msg['time']} for msg in messages]})
 
 # Page pour l'administrateur afin de voir la liste des messages avec le sentiment et la prédiction
 @app.route('/adm', methods=['GET'])
 def admin_view():
-    # La page admin montre le message avec le sentiment et l'heure d'envoi
     return render_template("adm.html", messages=messages)
