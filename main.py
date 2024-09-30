@@ -1,17 +1,7 @@
 import subprocess
 import sys
 
-# Installer manuellement la version compatible de NumPy si non installée
-try:
-    import numpy
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "numpy==1.23.5"])
 
-# Installer manuellement la version compatible de SciPy si non installée
-try:
-    import scipy
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "scipy==1.10.0"])
 
 
 
