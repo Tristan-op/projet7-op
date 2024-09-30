@@ -23,6 +23,11 @@ jobs:
         pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Unzip Machine Learning Model
+      run: |
+        echo "Décompression du modèle de machine learning..."
+        unzip ./models/LSTM_plus_Lemmatization_plus_FastText_model.zip -d ./models/
+
     - name: Preload Machine Learning Model
       run: |
         python - << END
