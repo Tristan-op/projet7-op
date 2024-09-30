@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration - Liste des Tweets</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Liste des Tweets</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Nom d'utilisateur</th>
+                <th>Message</th>
+                <th>Sentiment</th>
+                <th>Prédiction</th>
+            </tr>
+        </thead>
+        <tbody id="tweetList"></tbody>
+    </table>
+
+    <script>
+        // Charger les données de la base de données et les afficher
+        function loadTweets() {
+            fetch('/admin-data')
+            .then(response => response.json())
+            .then(data => {
+                const tweetList = document.getElementById('tweetList');
+                tweetList.innerHTML = '';
+                data.forEach(tweet => {
+                    const row = `<tr>
+                        <td>${tweet.username}</td>
+                        <td>${tweet.message}</td>
+                        <td>${tweet.sentiment === 1 ? 'Positif' : 'Négatif'}</td>
+                        <td>${tweet.prediction}</td>
+                    </tr>`;
+                    tweetList.innerHTML += row;
+                });
+            });
+        }
+
+        window.onload = loadTweets;
+    </script>
+</body>
+</html>

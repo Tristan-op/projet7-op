@@ -38,6 +38,18 @@ try:
 except ImportError:
     install_package('click', '8.1.3')
 
+# Installation de NumPy (avant SciPy)
+try:
+    import numpy
+except ImportError:
+    install_package('numpy', '1.23.5')
+
+# Installation de SciPy
+try:
+    import scipy
+except ImportError:
+    install_package('scipy', '1.10.0')
+
 # Installation de TensorFlow
 try:
     import tensorflow as tf
@@ -56,23 +68,13 @@ try:
 except ImportError:
     install_package('spacy', '3.5.1')
 
-# Installation de NumPy
-try:
-    import numpy
-except ImportError:
-    install_package('numpy', '1.23.5')
-
 # Installation de Gunicorn
 try:
     import gunicorn
 except ImportError:
     install_package('gunicorn', '20.1.0')
 
-# Installation de SciPy (si tu prévois de l'utiliser)
-try:
-    import scipy
-except ImportError:
-    install_package('scipy', '1.10.0')
+
 
 
 
