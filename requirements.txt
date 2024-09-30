@@ -6,3 +6,4 @@ spacy==3.5.1
 jinja2==3.1.2
 numpy
 scipy==1.10.1  # Ajoutez une version compatible de SciPy
+keras==2.12.0
