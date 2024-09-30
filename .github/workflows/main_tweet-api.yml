@@ -18,6 +18,9 @@ jobs:
       with:
         python-version: '3.11'
 
+    - name: Make startup.sh executable
+      run: chmod +x ./startup.sh  # Étape ajoutée pour rendre startup.sh exécutable
+
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
