@@ -34,9 +34,6 @@ jobs:
         import spacy
         import tensorflow as tf
 
-        # Charger le modèle FastText
-        ft_model = api.load('fasttext-wiki-news-subwords-300')
-        print("Modèle FastText chargé.")
 
         # Initialiser spaCy
         nlp = spacy.load('en_core_web_sm')

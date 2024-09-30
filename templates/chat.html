@@ -21,9 +21,10 @@
             const message = document.getElementById('messageContent').value;
             const sentiment = document.querySelector('input[name="sentiment"]:checked').value;
 
-            // Désactiver le bouton d'envoi pendant la requête
+            // Désactiver le bouton d'envoi pendant la requête et afficher la barre de chargement
             isSending = true;
             document.getElementById('submitBtn').disabled = true;
+            document.getElementById('loadingBar').style.display = 'block';  // Affiche la barre de chargement
 
             fetch('/send-message', {
                 method: 'POST',
@@ -43,6 +44,7 @@
             .finally(() => {
                 isSending = false;  // Réactiver l'envoi une fois la réponse reçue
                 checkForm();  // Vérifier de nouveau si les champs sont remplis
+                document.getElementById('loadingBar').style.display = 'none';  // Masque la barre de chargement
             });
         }
 
@@ -66,6 +68,11 @@
 
     <!-- Historique des messages -->
     <div id="chatHistory"></div>
+
+    <!-- Barre de chargement -->
+    <div id="loadingBar" style="display:none; margin-top: 10px; margin-bottom: 10px;">
+        <progress max="100"></progress> Envoi en cours...
+    </div>
 
     <!-- Formulaire d'envoi de message -->
     <form id="messageForm">

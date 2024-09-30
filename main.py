@@ -5,6 +5,13 @@ import tensorflow as tf
 import re
 import spacy
 import gensim.downloader as api
+from threading import Thread
+
+# Fonction pour charger le modèle en arrière-plan
+def load_fasttext_model():
+    global ft_model
+    ft_model = api.load('fasttext-wiki-news-subwords-300')
+    print("Modèle FastText chargé.")
 
 app = Flask(__name__, template_folder="templates")
 
