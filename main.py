@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template
 from threading import Thread
 from datetime import datetime
 import time
@@ -12,34 +12,34 @@ app = Flask(__name__, template_folder="templates")
 
 # Variables pour suivre l'état du chargement
 loading_progress = {
-    "fasttext_loaded": False,
+    "tensorflow_loaded": False,
     "spacy_loaded": False,
-    "tensorflow_loaded": False
+    "fasttext_loaded": False
 }
 
 # Simuler une base de données en mémoire pour stocker les messages
 messages = []
 
-# Charger le modèle FastText
-def load_fasttext_model():
-    global ft_model
-    ft_model = api.load('fasttext-wiki-news-subwords-300')
-    loading_progress["fasttext_loaded"] = True
-    print("Modèle FastText chargé.")
+# Charger le modèle TensorFlow (plus léger)
+def load_tensorflow_model():
+    global lstm_model
+    lstm_model = tf.keras.models.load_model('./models/LSTM_plus_Lemmatization_plus_FastText_model.h5')
+    loading_progress["tensorflow_loaded"] = True
+    print("Modèle TensorFlow chargé.")
 
-# Charger le modèle spaCy
+# Charger le modèle spaCy (modérément lourd)
 def load_spacy_model():
     global nlp
     nlp = spacy.load('en_core_web_sm')
     loading_progress["spacy_loaded"] = True
     print("Modèle spaCy initialisé.")
 
-# Charger le modèle TensorFlow
-def load_tensorflow_model():
-    global lstm_model
-    lstm_model = tf.keras.models.load_model('./models/LSTM_plus_Lemmatization_plus_FastText_model.h5')
-    loading_progress["tensorflow_loaded"] = True
-    print("Modèle TensorFlow chargé.")
+# Charger le modèle FastText (plus lourd)
+def load_fasttext_model():
+    global ft_model
+    ft_model = api.load('fasttext-wiki-news-subwords-300')
+    loading_progress["fasttext_loaded"] = True
+    print("Modèle FastText chargé.")
 
 # Prétraitement du texte avec spaCy et nettoyage des caractères spéciaux
 def preprocess_text(text):
@@ -142,15 +142,17 @@ def check_progress():
         "completed": loading_progress
     })
 
-# Démarrer le chargement des modèles FastText, spaCy et TensorFlow en arrière-plan
+# Démarrer le chargement des modèles TensorFlow, spaCy et FastText en arrière-plan
 if __name__ == '__main__':
-    # Créer des threads pour charger les modèles en arrière-plan
-    fasttext_thread = Thread(target=load_fasttext_model)
-    spacy_thread = Thread(target=load_spacy_model)
+    # Créer des threads pour charger les modèles en arrière-plan dans l'ordre : TensorFlow -> spaCy -> FastText
     tensorflow_thread = Thread(target=load_tensorflow_model)
+    spacy_thread = Thread(target=load_spacy_model)
+    fasttext_thread = Thread(target=load_fasttext_model)
 
-    fasttext_thread.start()
-    spacy_thread.start()
     tensorflow_thread.start()
+    tensorflow_thread.join()  # Attendre que TensorFlow se charge avant de lancer spaCy
+    spacy_thread.start()
+    spacy_thread.join()  # Attendre que spaCy se charge avant de lancer FastText
+    fasttext_thread.start()
 
     app.run(debug=True)

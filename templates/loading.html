@@ -12,6 +12,7 @@
             width: 120px;
             height: 120px;
             animation: spin 2s linear infinite;
+            margin: 0 auto;
         }
 
         @keyframes spin {
@@ -19,15 +20,15 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Style de la barre de progression */
-        .progress-bar {
-            width: 100%;
+        /* Style des barres de progression */
+        .progress-container {
+            width: 80%;
             background-color: #f3f3f3;
             border-radius: 5px;
-            margin-top: 20px;
+            margin: 20px auto;
         }
 
-        .progress-bar-inner {
+        .progress-bar {
             height: 30px;
             width: 0;
             background-color: #4caf50;
@@ -36,17 +37,23 @@
             line-height: 30px;
             color: white;
         }
+
+        .progress-label {
+            text-align: center;
+            margin-top: 10px;
+        }
     </style>
 
     <script>
-        function updateProgressBar(progress, completed) {
-            const progressBarInner = document.getElementById("progress-bar-inner");
-            progressBarInner.style.width = progress + "%";
-            progressBarInner.innerText = progress + "%";
+        function updateProgressBar(progress, completed, modelName) {
+            const progressBar = document.getElementById(`${modelName}-progress-bar`);
+            progressBar.style.width = progress + "%";
+            progressBar.innerText = progress + "%";
 
-            if (completed.fasttext_loaded && completed.spacy_loaded) {
-                // Rediriger vers la page welcome.html une fois le chargement terminé
-                window.location.href = "/welcome";
+            if (completed) {
+                progressBar.style.backgroundColor = "#4caf50"; // Vert pour terminé
+            } else {
+                progressBar.style.backgroundColor = "#3498db"; // Bleu pour en cours
             }
         }
 
@@ -54,7 +61,31 @@
             fetch('/check-progress')
             .then(response => response.json())
             .then(data => {
-                updateProgressBar(data.progress, data.completed);
+                // Mettre à jour chaque barre de progression individuellement
+                const { progress, completed } = data;
+
+                if (completed.tensorflow_loaded) {
+                    updateProgressBar(100, true, "tensorflow");
+                } else {
+                    updateProgressBar((progress / 3) * 1, false, "tensorflow"); // 33.33% max pour TensorFlow
+                }
+
+                if (completed.spacy_loaded) {
+                    updateProgressBar(100, true, "spacy");
+                } else {
+                    updateProgressBar(((progress - (completed.tensorflow_loaded ? 100 : 0)) / 2), false, "spacy"); // 50% max pour spaCy
+                }
+
+                if (completed.fasttext_loaded) {
+                    updateProgressBar(100, true, "fasttext");
+                } else {
+                    updateProgressBar(progress, false, "fasttext"); // 100% max pour FastText
+                }
+
+                // Vérifier si tous les modèles sont chargés pour rediriger
+                if (completed.tensorflow_loaded && completed.spacy_loaded && completed.fasttext_loaded) {
+                    window.location.href = "/welcome";
+                }
             })
             .catch(error => {
                 console.error('Erreur lors de la vérification de l\'état de chargement', error);
@@ -66,12 +97,25 @@
     </script>
 </head>
 <body>
-    <h1>Chargement des modèles...</h1>
+    <h1 style="text-align: center;">Chargement des Modèles...</h1>
     <div class="loader"></div>
     
-    <!-- Barre de progression -->
-    <div class="progress-bar">
-        <div id="progress-bar-inner" class="progress-bar-inner">0%</div>
+    <!-- Barre de progression pour TensorFlow -->
+    <div class="progress-container">
+        <div id="tensorflow-progress-bar" class="progress-bar">0%</div>
     </div>
+    <div class="progress-label">Chargement du modèle TensorFlow</div>
+    
+    <!-- Barre de progression pour spaCy -->
+    <div class="progress-container">
+        <div id="spacy-progress-bar" class="progress-bar">0%</div>
+    </div>
+    <div class="progress-label">Chargement du modèle spaCy</div>
+    
+    <!-- Barre de progression pour FastText -->
+    <div class="progress-container">
+        <div id="fasttext-progress-bar" class="progress-bar">0%</div>
+    </div>
+    <div class="progress-label">Chargement du modèle FastText</div>
 </body>
 </html>
