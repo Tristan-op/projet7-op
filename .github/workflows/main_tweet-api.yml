@@ -24,7 +24,9 @@ jobs:
     - name: Make startup.sh executable
       run: chmod +x ./startup.sh
 
-
+  # Exécuter le script startup.sh après le déploiement
+    - name: Run startup.sh
+      run: ./startup.sh
 
     # Étape 5: Déployer l'application sur Azure
     - name: Deploy to Azure Web App
@@ -36,9 +38,7 @@ jobs:
 
 
 
-  # Exécuter le script startup.sh après le déploiement
-    - name: Run startup.sh
-      run: ./startup.sh
+
 
 
 
