@@ -19,7 +19,7 @@ def continue_to_chat():
 @app.route('/exit', methods=['GET'])
 def exit_app():
     
-return "Application terminée. Merci d'avoir utilisé notre service.", 200
+return "Application terminée. Merci d'avoir utilisé notre service."
 
 @app.route('/chat', methods=['GET'])
 def chat():
