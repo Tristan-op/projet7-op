@@ -1,6 +1,10 @@
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request
 from threading import Thread
+from datetime import datetime
 import time
+import numpy as np
+import tensorflow as tf
+import re
 import gensim.downloader as api
 import spacy
 
@@ -9,27 +13,54 @@ app = Flask(__name__, template_folder="templates")
 # Variables pour suivre l'état du chargement
 loading_progress = {
     "fasttext_loaded": False,
-    "spacy_loaded": False
+    "spacy_loaded": False,
+    "tensorflow_loaded": False
 }
 
 # Simuler une base de données en mémoire pour stocker les messages
 messages = []
 
-# Fonction pour charger le modèle FastText
+# Charger le modèle FastText
 def load_fasttext_model():
-    global loading_progress
-    time.sleep(2)  # Simuler le temps de chargement
+    global ft_model
     ft_model = api.load('fasttext-wiki-news-subwords-300')
     loading_progress["fasttext_loaded"] = True
     print("Modèle FastText chargé.")
 
-# Fonction pour charger le modèle spaCy
+# Charger le modèle spaCy
 def load_spacy_model():
-    global loading_progress
-    time.sleep(2)  # Simuler le temps de chargement
+    global nlp
     nlp = spacy.load('en_core_web_sm')
     loading_progress["spacy_loaded"] = True
     print("Modèle spaCy initialisé.")
+
+# Charger le modèle TensorFlow
+def load_tensorflow_model():
+    global lstm_model
+    lstm_model = tf.keras.models.load_model('./models/LSTM_plus_Lemmatization_plus_FastText_model.h5')
+    loading_progress["tensorflow_loaded"] = True
+    print("Modèle TensorFlow chargé.")
+
+# Prétraitement du texte avec spaCy et nettoyage des caractères spéciaux
+def preprocess_text(text):
+    # Convertir en minuscules et supprimer les caractères spéciaux
+    text = re.sub(r'[^\w\s]', '', text.lower())
+    
+    # Lemmatisation avec spaCy
+    doc = nlp(text)
+    lemmatized_text = ' '.join([token.lemma_ for token in doc])
+    
+    return lemmatized_text
+
+# Créer la matrice d'embedding avec FastText
+def create_embedding_matrix(words, embedding_model, embedding_dim=300):
+    embedding_matrix = np.zeros((len(words), embedding_dim))
+    for idx, word in enumerate(words):
+        if word in embedding_model:
+            embedding_matrix[idx] = embedding_model[word]
+        else:
+            embedding_matrix[idx] = np.zeros(embedding_dim)
+    return embedding_matrix
 
 @app.route('/')
 def loading():
@@ -60,15 +91,34 @@ def send_message():
         message = data['message']
         sentiment = data['sentiment']
 
+        # Prétraitement du message
+        preprocessed_message = preprocess_text(message)
+
+        # Embedding FastText
+        words = preprocessed_message.split()
+        embedding_matrix = create_embedding_matrix(words, ft_model)
+
+        # Utiliser le modèle LSTM pour la prédiction
+        prediction = lstm_model.predict(np.array([embedding_matrix]))  # Adapter la forme si nécessaire
+
+        # Comparaison avec le sentiment attendu
+        predicted_sentiment = 1 if prediction[0][0] > 0.5 else 0  # Seuil pour définir positif/négatif
+
+        if predicted_sentiment == sentiment:
+            response = "J'ai bien compris tes sentiments."
+        else:
+            response = "Désolé, j'apprends encore, je n'ai pas bien compris tes sentiments."
+
         # Stocker les messages dans la liste avec les informations de temps
         messages.append({
             'username': username,
             'message': message,
             'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'sentiment': sentiment
+            'sentiment': sentiment,
+            'predicted_sentiment': predicted_sentiment
         })
 
-        return jsonify({'result': "Message reçu."}), 200
+        return jsonify({'result': response}), 200
     else:
         return jsonify({'result': 'Erreur lors de l\'envoi du message'}), 400
 
@@ -76,7 +126,7 @@ def send_message():
 def chat_history():
     return jsonify({'messages': [{'username': msg['username'], 'message': msg['message'], 'time': msg['time']} for msg in messages]})
 
-# Page pour l'administrateur afin de voir la liste des messages
+# Page pour l'administrateur afin de voir la liste des messages avec le sentiment et la prédiction
 @app.route('/adm', methods=['GET'])
 def admin_view():
     return render_template("adm.html", messages=messages)
@@ -84,7 +134,7 @@ def admin_view():
 # API pour vérifier l'état du chargement des modèles
 @app.route('/check-progress', methods=['GET'])
 def check_progress():
-    total_tasks = 2
+    total_tasks = 3
     completed_tasks = sum(loading_progress.values())
     progress_percentage = (completed_tasks / total_tasks) * 100
     return jsonify({
@@ -92,13 +142,15 @@ def check_progress():
         "completed": loading_progress
     })
 
-# Démarrer le chargement des modèles FastText et spaCy en arrière-plan
+# Démarrer le chargement des modèles FastText, spaCy et TensorFlow en arrière-plan
 if __name__ == '__main__':
     # Créer des threads pour charger les modèles en arrière-plan
     fasttext_thread = Thread(target=load_fasttext_model)
     spacy_thread = Thread(target=load_spacy_model)
+    tensorflow_thread = Thread(target=load_tensorflow_model)
 
     fasttext_thread.start()
     spacy_thread.start()
+    tensorflow_thread.start()
 
     app.run(debug=True)
