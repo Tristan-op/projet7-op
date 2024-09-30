@@ -10,35 +10,52 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Étape 1: Récupérer le code
     - name: Checkout code
       uses: actions/checkout@v2
 
-    # Étape 2: Configurer Python
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.11'
 
-    # Étape 3: Installer les dépendances (requirements.txt)
     - name: Install dependencies
       run: |
         pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Preload Machine Learning Model
+      run: |
+        python - << END
+        import tensorflow as tf
 
-    # Étape 5: Rendre startup.sh exécutable
-    - name: Make startup.sh executable
-      run: chmod +x ./startup.sh
+        # Charger le modèle de machine learning
+        lstm_model = tf.keras.models.load_model('./models/LSTM_plus_Lemmatization_plus_FastText_model.h5')
+        print("Modèle de machine learning préchargé.")
+        END
 
-    # Étape 6: Déployer sur Azure Web App
+    - name: Preload spaCy Model
+      run: |
+        python - << END
+        import spacy
+
+        # Initialiser spaCy
+        nlp = spacy.load('en_core_web_sm')
+        print("Modèle spaCy préchargé.")
+        END
+
+    - name: Preload FastText Model
+      run: |
+        python - << END
+        import gensim.downloader as api
+
+        # Charger le modèle FastText
+        ft_model = api.load('fasttext-wiki-news-subwords-300')
+        print("Modèle FastText préchargé.")
+        END
+
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'tweet-api'
         publish-profile: ${{ secrets.AZURE_API }}
         package: .
-
-    # Étape 7: Lancer le script startup.sh pour démarrer l'application avec Gunicorn
-    - name: Run startup.sh
-      run: ./startup.sh
