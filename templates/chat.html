@@ -58,15 +58,15 @@
     <!-- Formulaire d'envoi de message -->
     <form id="messageForm">
         <label for="username">Nom d'utilisateur :</label>
-        <input type="text" id="username" name="username" oninput="checkForm()" required><br><br>
+        <input type="text" id="username" name="username" oninput="checkForm()"><br><br>
 
         <label for="messageContent">Message :</label>
-        <textarea id="messageContent" name="message" rows="4" cols="50" oninput="checkForm()" required></textarea><br><br>
+        <textarea id="messageContent" name="message" rows="4" cols="50" oninput="checkForm()"></textarea><br><br>
 
         <label for="sentiment">Sentiment :</label><br>
-        <input type="radio" id="positif" name="sentiment" value="1" onclick="checkForm()" required>
+        <input type="radio" id="positif" name="sentiment" value="1" onclick="checkForm()">
         <label for="positif">Positif</label><br>
-        <input type="radio" id="negatif" name="sentiment" value="0" onclick="checkForm()" required>
+        <input type="radio" id="negatif" name="sentiment" value="0" onclick="checkForm()">
         <label for="negatif">Négatif</label><br><br>
 
         <button type="button" id="submitBtn" disabled onclick="sendMessage()">Envoyer</button>
