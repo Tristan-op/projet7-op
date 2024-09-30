@@ -1,12 +1,10 @@
-import subprocess
-import sys
 from flask import Flask, jsonify, request, render_template
 from datetime import datetime
-import numpy as np
-import tensorflow as tf
-import re
-import spacy
-import gensim.downloader as api
+#import numpy as np
+#import tensorflow as tf
+#import re
+#import spacy
+#import gensim.downloader as api
 
 app = Flask(__name__, template_folder="templates")
 
@@ -14,13 +12,13 @@ app = Flask(__name__, template_folder="templates")
 messages = []
 
 # Charger le modèle FastText pré-entraîné via gensim
-ft_model = api.load('fasttext-wiki-news-subwords-300')
+# ft_model = api.load('fasttext-wiki-news-subwords-300')
 
 # Charger le modèle LSTM (fichier .h5)
-lstm_model = tf.keras.models.load_model("./models/LSTM_plus_Lemmatization_plus_FastText_model.h5")
+# lstm_model = tf.keras.models.load_model("./models/LSTM_plus_Lemmatization_plus_FastText_model.h5")
 
 # Initialiser spaCy pour la lemmatisation
-nlp = spacy.load('en_core_web_sm')
+# nlp = spacy.load('en_core_web_sm')
 
 @app.route('/')
 def home():
@@ -39,25 +37,25 @@ def chat():
     return render_template("chat.html", messages=messages)
 
 # Prétraitement du texte : lemmatisation, nettoyage des caractères spéciaux, etc.
-def preprocess_text(text):
-    # Convertir en minuscules et supprimer les caractères spéciaux
-    text = re.sub(r'[^\w\s]', '', text.lower())
-    
-    # Lemmatisation avec spaCy
-    doc = nlp(text)
-    lemmatized_text = ' '.join([token.lemma_ for token in doc])
-    
-    return lemmatized_text
+# def preprocess_text(text):
+#     # Convertir en minuscules et supprimer les caractères spéciaux
+#     text = re.sub(r'[^\w\s]', '', text.lower())
+#     
+#     # Lemmatisation avec spaCy
+#     doc = nlp(text)
+#     lemmatized_text = ' '.join([token.lemma_ for token in doc])
+#     
+#     return lemmatized_text
 
 # Créer la matrice d'embedding avec FastText
-def create_embedding_matrix(words, embedding_model, embedding_dim=300):
-    embedding_matrix = np.zeros((len(words), embedding_dim))
-    for idx, word in enumerate(words):
-        if word in embedding_model:
-            embedding_matrix[idx] = embedding_model[word]
-        else:
-            embedding_matrix[idx] = np.zeros(embedding_dim)
-    return embedding_matrix
+# def create_embedding_matrix(words, embedding_model, embedding_dim=300):
+#     embedding_matrix = np.zeros((len(words), embedding_dim))
+#     for idx, word in enumerate(words):
+#         if word in embedding_model:
+#             embedding_matrix[idx] = embedding_model[word]
+#         else:
+#             embedding_matrix[idx] = np.zeros(embedding_dim)
+#     return embedding_matrix
 
 @app.route('/send-message', methods=['POST'])
 def send_message():
@@ -68,23 +66,26 @@ def send_message():
         message = data['message']
         sentiment = data['sentiment']
 
-        # Prétraitement du message
-        preprocessed_message = preprocess_text(message)
+        # Prétraitement du message (désactivé pour le moment)
+        # preprocessed_message = preprocess_text(message)
 
-        # Embedding FastText
-        words = preprocessed_message.split()
-        embedding_matrix = create_embedding_matrix(words, ft_model)
+        # Embedding FastText (désactivé pour le moment)
+        # words = preprocessed_message.split()
+        # embedding_matrix = create_embedding_matrix(words, ft_model)
 
-        # Utiliser le modèle LSTM pour la prédiction
-        prediction = lstm_model.predict(np.array([embedding_matrix]))  # Adapter la forme si nécessaire
+        # Utiliser le modèle LSTM pour la prédiction (désactivé pour le moment)
+        # prediction = lstm_model.predict(np.array([embedding_matrix]))  # Adapter la forme si nécessaire
 
-        # Comparaison avec le sentiment attendu
-        predicted_sentiment = 1 if prediction[0][0] > 0.5 else 0  # Seuil pour définir positif/négatif
+        # Comparaison avec le sentiment attendu (désactivé pour le moment)
+        # predicted_sentiment = 1 if prediction[0][0] > 0.5 else 0  # Seuil pour définir positif/négatif
 
-        if predicted_sentiment == sentiment:
-            response = "J'ai bien compris tes sentiments."
-        else:
-            response = "Désolé, j'apprends encore, je n'ai pas bien compris tes sentiments."
+        # if predicted_sentiment == sentiment:
+        #     response = "J'ai bien compris tes sentiments."
+        # else:
+        #     response = "Désolé, j'apprends encore, je n'ai pas bien compris tes sentiments."
+
+        # Pour l'instant, on ne fait que stocker le message
+        response = "Message reçu."
 
         # Stocker les messages dans la liste avec les informations de temps
         messages.append({
@@ -102,3 +103,7 @@ def send_message():
 def chat_history():
     return jsonify({'messages': [{'username': msg['username'], 'message': msg['message'], 'time': msg['time']} for msg in messages]})
 
+# Page pour l'administrateur afin de voir la liste des messages
+@app.route('/adm', methods=['GET'])
+def admin_view():
+    return render_template("adm.html", messages=messages)
