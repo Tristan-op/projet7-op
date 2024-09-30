@@ -12,7 +12,7 @@ app = Flask(__name__, template_folder="templates")
 
 # Variables pour suivre l'état du chargement
 loading_progress = {
-    "tensorflow_loaded": False,
+    "machine_learning_loaded": False,
     "spacy_loaded": False,
     "fasttext_loaded": False
 }
@@ -25,21 +25,20 @@ ft_model = None
 nlp = None
 lstm_model = None
 
-# Fonction pour charger le modèle TensorFlow (le moins lourd)
-def load_tensorflow_model():
-    global lstm_model
+# Fonction pour charger tous les modèles en arrière-plan
+def load_all_models():
+    global lstm_model, nlp, ft_model
     try:
+        # Charger le modèle TensorFlow (Machine Learning)
         print("Chargement du modèle TensorFlow...")
         lstm_model = tf.keras.models.load_model('./models/LSTM_plus_Lemmatization_plus_FastText_model.h5')
-        loading_progress["tensorflow_loaded"] = True
+        loading_progress["machine_learning_loaded"] = True
         print("Modèle TensorFlow chargé.")
     except Exception as e:
         print(f"Erreur lors du chargement du modèle TensorFlow: {e}")
 
-# Fonction pour charger le modèle spaCy (modérément lourd)
-def load_spacy_model():
-    global nlp
     try:
+        # Charger le modèle spaCy
         print("Chargement du modèle spaCy...")
         nlp = spacy.load('en_core_web_sm')
         loading_progress["spacy_loaded"] = True
@@ -47,10 +46,8 @@ def load_spacy_model():
     except Exception as e:
         print(f"Erreur lors du chargement du modèle spaCy: {e}")
 
-# Fonction pour charger le modèle FastText (le plus lourd)
-def load_fasttext_model():
-    global ft_model
     try:
+        # Charger le modèle FastText
         print("Chargement du modèle FastText...")
         ft_model = api.load('fasttext-wiki-news-subwords-300')
         loading_progress["fasttext_loaded"] = True
@@ -62,11 +59,11 @@ def load_fasttext_model():
 def preprocess_text(text):
     # Convertir en minuscules et supprimer les caractères spéciaux
     text = re.sub(r'[^\w\s]', '', text.lower())
-    
+
     # Lemmatisation avec spaCy
     doc = nlp(text)
     lemmatized_text = ' '.join([token.lemma_ for token in doc])
-    
+
     return lemmatized_text
 
 # Créer la matrice d'embedding avec FastText
@@ -111,7 +108,7 @@ def send_message():
     data = request.get_json()
 
     # Vérifier si tous les modèles sont chargés
-    if not (loading_progress["tensorflow_loaded"] and loading_progress["spacy_loaded"] and loading_progress["fasttext_loaded"]):
+    if not (loading_progress["machine_learning_loaded"] and loading_progress["spacy_loaded"] and loading_progress["fasttext_loaded"]):
         return jsonify({'result': 'Les modèles ne sont pas encore chargés. Veuillez patienter.'}), 503
 
     if 'username' in data and 'message' in data and 'sentiment' in data:
@@ -128,7 +125,18 @@ def send_message():
 
         # Utiliser le modèle LSTM pour la prédiction
         try:
-            prediction = lstm_model.predict(np.array([embedding_matrix]))  # Adapter la forme si nécessaire
+            # Assure que embedding_matrix a la forme correcte
+            # Supposons que lstm_model attend (batch_size, sequence_length, embedding_dim)
+            # Ajuster la longueur de séquence, par exemple 100
+            max_length = 100
+            if len(embedding_matrix) < max_length:
+                padding = np.zeros((max_length - len(embedding_matrix), embedding_matrix.shape[1]))
+                embedding_matrix = np.vstack([embedding_matrix, padding])
+            else:
+                embedding_matrix = embedding_matrix[:max_length]
+            # Redimensionner à (1, max_length, embedding_dim)
+            embedding_matrix = np.expand_dims(embedding_matrix, axis=0)
+            prediction = lstm_model.predict(embedding_matrix)  # forme supposée (1, 1)
             # Comparaison avec le sentiment attendu
             predicted_sentiment = 1 if prediction[0][0] > 0.5 else 0  # Seuil pour définir positif/négatif
 
@@ -166,23 +174,20 @@ def admin_view():
 # API pour vérifier l'état du chargement des modèles
 @app.route('/check-progress', methods=['GET'])
 def check_progress():
-    total_tasks = 3
+    # Calculer le pourcentage basé sur le nombre de modèles chargés
+    total_tasks = len(loading_progress)
     completed_tasks = sum(loading_progress.values())
-    progress_percentage = (completed_tasks / total_tasks) * 100
+    progress_percentage = int((completed_tasks / total_tasks) * 100)
     return jsonify({
         "progress": progress_percentage,
         "completed": loading_progress
     })
 
-# Démarrer le chargement des modèles TensorFlow, spaCy et FastText en arrière-plan
+# Démarrer le chargement des modèles en arrière-plan
 if __name__ == '__main__':
-    # Créer des threads pour charger les modèles en arrière-plan dans l'ordre : TensorFlow -> spaCy -> FastText
-    tensorflow_thread = Thread(target=load_tensorflow_model)
-    spacy_thread = Thread(target=load_spacy_model)
-    fasttext_thread = Thread(target=load_fasttext_model)
+    # Créer un thread pour charger tous les modèles en arrière-plan
+    model_thread = Thread(target=load_all_models)
+    model_thread.start()
 
-    tensorflow_thread.start()
-    spacy_thread.start()
-    fasttext_thread.start()
-
+    # Démarrer l'application Flask
     app.run(debug=True)
