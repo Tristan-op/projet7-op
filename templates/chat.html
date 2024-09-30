@@ -21,10 +21,10 @@
             const message = document.getElementById('messageContent').value;
             const sentiment = document.querySelector('input[name="sentiment"]:checked').value;
 
-            // Désactiver le bouton d'envoi pendant la requête et afficher la barre de chargement
+            // Désactiver le bouton d'envoi et afficher la barre de chargement pendant la requête
             isSending = true;
             document.getElementById('submitBtn').disabled = true;
-            document.getElementById('loadingBar').style.display = 'block';  // Affiche la barre de chargement
+            document.getElementById('loadingBar').style.display = 'block';
 
             fetch('/send-message', {
                 method: 'POST',
@@ -43,8 +43,9 @@
             })
             .finally(() => {
                 isSending = false;  // Réactiver l'envoi une fois la réponse reçue
+                document.getElementById('submitBtn').disabled = false;
+                document.getElementById('loadingBar').style.display = 'none';
                 checkForm();  // Vérifier de nouveau si les champs sont remplis
-                document.getElementById('loadingBar').style.display = 'none';  // Masque la barre de chargement
             });
         }
 
@@ -62,6 +63,27 @@
 
         window.onload = loadChatHistory;
     </script>
+    <style>
+        /* Style pour la barre de chargement */
+        #loadingBar {
+            width: 100%;
+            height: 5px;
+            background-color: #f3f3f3;
+            display: none;
+        }
+
+        #loadingBar div {
+            width: 0%;
+            height: 100%;
+            background-color: #4caf50;
+            animation: loading 2s infinite;
+        }
+
+        @keyframes loading {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+    </style>
 </head>
 <body>
     <h1>Chat</h1>
@@ -70,8 +92,8 @@
     <div id="chatHistory"></div>
 
     <!-- Barre de chargement -->
-    <div id="loadingBar" style="display:none; margin-top: 10px; margin-bottom: 10px;">
-        <progress max="100"></progress> Envoi en cours...
+    <div id="loadingBar">
+        <div></div>
     </div>
 
     <!-- Formulaire d'envoi de message -->

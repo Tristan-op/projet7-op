@@ -7,16 +7,27 @@ import spacy
 import gensim.downloader as api
 from threading import Thread
 
-# Fonction pour charger le modèle en arrière-plan
+app = Flask(__name__, template_folder="templates")
+
+# Simuler une base de données en mémoire pour stocker les messages
+messages = []
+
+# Charger le modèle LSTM (fichier .h5)
+lstm_model = tf.keras.models.load_model("./models/LSTM_plus_Lemmatization_plus_FastText_model.h5")
+
+# Initialiser spaCy pour la lemmatisation
+nlp = spacy.load('en_core_web_sm')
+
+# Préchargement du modèle FastText en arrière-plan
+ft_model = None  # Modèle FastText global
 def load_fasttext_model():
     global ft_model
     ft_model = api.load('fasttext-wiki-news-subwords-300')
     print("Modèle FastText chargé.")
 
-app = Flask(__name__, template_folder="templates")
-
-# Simuler une base de données en mémoire pour stocker les messages
-messages = []
+# Lancer le chargement du modèle FastText en arrière-plan
+thread = Thread(target=load_fasttext_model)
+thread.start()
 
 @app.route('/')
 def home():
@@ -57,6 +68,10 @@ def create_embedding_matrix(words, embedding_model, embedding_dim=300):
 
 @app.route('/send-message', methods=['POST'])
 def send_message():
+    global ft_model  # Utiliser le modèle global préchargé
+    if not ft_model:
+        return jsonify({'result': 'Le modèle FastText n\'est pas encore prêt.'}), 503
+
     data = request.get_json()
 
     if 'username' in data and 'message' in data and 'sentiment' in data:
@@ -96,9 +111,14 @@ def send_message():
 
 @app.route('/chat-history', methods=['GET'])
 def chat_history():
+    # Renvoie l'historique des messages sans le sentiment (pour l'affichage dans le chat)
     return jsonify({'messages': [{'username': msg['username'], 'message': msg['message'], 'time': msg['time']} for msg in messages]})
 
 # Page pour l'administrateur afin de voir la liste des messages avec le sentiment et la prédiction
 @app.route('/adm', methods=['GET'])
 def admin_view():
+    # La page admin montre le message avec le sentiment et l'heure d'envoi
     return render_template("adm.html", messages=messages)
+
+if __name__ == '__main__':
+    app.run(debug=True)
