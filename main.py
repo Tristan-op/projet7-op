@@ -1,35 +1,41 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, redirect, url_for
 from datetime import datetime
-import numpy as np
-import tensorflow as tf
-import re
-import spacy
-import gensim.downloader as api
 from threading import Thread
+import time
+import gensim.downloader as api
+import spacy
 
 app = Flask(__name__, template_folder="templates")
 
 # Simuler une base de données en mémoire pour stocker les messages
 messages = []
 
-# Charger le modèle LSTM (fichier .h5)
-lstm_model = tf.keras.models.load_model("./models/LSTM_plus_Lemmatization_plus_FastText_model.h5")
+# Variables globales pour le modèle et l'état de chargement
+ft_model = None
+nlp = None
+models_loaded = False
 
-# Initialiser spaCy pour la lemmatisation
-nlp = spacy.load('en_core_web_sm')
+# Fonction pour charger le modèle en arrière-plan
+def load_models():
+    global ft_model, nlp, models_loaded
+    try:
+        print("Chargement des modèles FastText et spaCy en cours...")
+        ft_model = api.load('fasttext-wiki-news-subwords-300')
+        nlp = spacy.load('en_core_web_sm')
+        models_loaded = True
+        print("Modèles FastText et spaCy chargés.")
+    except Exception as e:
+        print(f"Erreur lors du chargement des modèles : {e}")
 
-# Préchargement du modèle FastText en arrière-plan
-ft_model = None  # Modèle FastText global
-def load_fasttext_model():
-    global ft_model
-    ft_model = api.load('fasttext-wiki-news-subwords-300')
-    print("Modèle FastText chargé.")
-
-# Lancer le chargement du modèle FastText en arrière-plan
-thread = Thread(target=load_fasttext_model)
-thread.start()
-
+# Page de préchargement des modèles
 @app.route('/')
+def preload():
+    if models_loaded:
+        return redirect(url_for('home'))  # Rediriger vers la page d'accueil une fois les modèles chargés
+    return render_template("preload.html")  # Afficher la page de préchargement
+
+# Page d'accueil
+@app.route('/welcome', methods=['GET'])
 def home():
     return render_template("welcome.html")
 
@@ -68,10 +74,6 @@ def create_embedding_matrix(words, embedding_model, embedding_dim=300):
 
 @app.route('/send-message', methods=['POST'])
 def send_message():
-    global ft_model  # Utiliser le modèle global préchargé
-    if not ft_model:
-        return jsonify({'result': 'Le modèle FastText n\'est pas encore prêt.'}), 503
-
     data = request.get_json()
 
     if 'username' in data and 'message' in data and 'sentiment' in data:
@@ -86,16 +88,7 @@ def send_message():
         words = preprocessed_message.split()
         embedding_matrix = create_embedding_matrix(words, ft_model)
 
-        # Utiliser le modèle LSTM pour la prédiction
-        prediction = lstm_model.predict(np.array([embedding_matrix]))  # Adapter la forme si nécessaire
-
-        # Comparaison avec le sentiment attendu
-        predicted_sentiment = 1 if prediction[0][0] > 0.5 else 0  # Seuil pour définir positif/négatif
-
-        if predicted_sentiment == sentiment:
-            response = "J'ai bien compris tes sentiments."
-        else:
-            response = "Désolé, j'apprends encore, je n'ai pas bien compris tes sentiments."
+        # Ici, vous pouvez ajouter le traitement du modèle LSTM si nécessaire
 
         # Stocker les messages dans la liste avec les informations de temps
         messages.append({
@@ -105,20 +98,23 @@ def send_message():
             'sentiment': sentiment
         })
 
-        return jsonify({'result': response}), 200
+        return jsonify({'result': "Message reçu."}), 200
     else:
         return jsonify({'result': 'Erreur lors de l\'envoi du message'}), 400
 
 @app.route('/chat-history', methods=['GET'])
 def chat_history():
-    # Renvoie l'historique des messages sans le sentiment (pour l'affichage dans le chat)
     return jsonify({'messages': [{'username': msg['username'], 'message': msg['message'], 'time': msg['time']} for msg in messages]})
 
-# Page pour l'administrateur afin de voir la liste des messages avec le sentiment et la prédiction
+# Page pour l'administrateur afin de voir la liste des messages avec le sentiment et l'heure
 @app.route('/adm', methods=['GET'])
 def admin_view():
-    # La page admin montre le message avec le sentiment et l'heure d'envoi
     return render_template("adm.html", messages=messages)
 
 if __name__ == '__main__':
+    # Créer un thread pour charger les modèles en arrière-plan
+    model_thread = Thread(target=load_models)
+    model_thread.start()
+
+    # Démarrer l'application Flask
     app.run(debug=True)
