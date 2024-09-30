@@ -18,18 +18,23 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Install dependencies from requirements.txt
-      run: |
-        echo "Installing dependencies from requirements.txt..."
-        pip install --upgrade pip
-        pip install -r requirements.txt
+    # Assurez-vous que le fichier startup.sh est exécutable
+    - name: Make startup.sh executable
+      run: chmod +x ./startup.sh
 
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'tweet-api'
         publish-profile: ${{ secrets.AZURE_API }}
-        package: .
+        package: ..
+
+    # Exécuter le script startup.sh après le déploiement
+    - name: Run startup.sh
+      run: ./startup.sh
+
+
+
 
 
 
