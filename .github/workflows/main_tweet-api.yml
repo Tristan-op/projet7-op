@@ -43,9 +43,10 @@ jobs:
 
         # Télécharger le modèle spaCy
         python -m spacy download en_core_web_sm
-
-        # Assurer que Gensim est bien installé
+        
+	# Assurer que Gensim est bien installé
         pip install gensim
+
         # Charger le modèle FastText avec Gensim (précache les embeddings)
         python -c "import gensim.downloader as api; api.load('fasttext-wiki-news-subwords-300')"
 
@@ -58,6 +59,11 @@ jobs:
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
-        app-name: "nom_de_ton_app"
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        app-name: 'tweet-api'
+        publish-profile: ${{ secrets.AZURE_API }}
         package: .
+
+
+
+
+
