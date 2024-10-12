@@ -39,6 +39,8 @@ jobs:
           echo "Erreur : Le modèle TFLite n'a pas été trouvé." && exit 1
         fi
         
+ 	 pip install spacy  # Assurer que spaCy est bien installé
+    	
         # Télécharger le modèle spaCy
         python -m spacy download en_core_web_sm
         
@@ -58,8 +60,4 @@ jobs:
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: .
 
-    # Étape 7 : Exécuter Flask (avec Gunicorn pour un environnement production si nécessaire)
-    - name: Start Flask server (Gunicorn)
-      run: |
-        source venv/bin/activate
-        gunicorn --workers 3 main:app
+
