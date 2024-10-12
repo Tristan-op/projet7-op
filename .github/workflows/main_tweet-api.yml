@@ -44,6 +44,8 @@ jobs:
         # Télécharger le modèle spaCy
         python -m spacy download en_core_web_sm
 
+        # Assurer que Gensim est bien installé
+        pip install gensim
         # Charger le modèle FastText avec Gensim (précache les embeddings)
         python -c "import gensim.downloader as api; api.load('fasttext-wiki-news-subwords-300')"
 
