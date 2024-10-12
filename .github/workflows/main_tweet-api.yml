@@ -30,11 +30,14 @@ jobs:
         pip install -r requirements.txt
         python -m spacy download en_core_web_sm  # Télécharger le modèle spaCy
 
-    # Étape 4 : Assurer que le modèle TFLite est bien placé dans le répertoire
-    - name: Upload TFLite Model
+    # Étape 4 : Vérifier que le modèle TFLite est bien présent
+    - name: Check if TFLite Model Exists
       run: |
-        mkdir -p models
-        cp D:/Master_Openclassroom/Github/projet7-op/notebooks/modèle_avancé/cnn_model_256_3_0.5.tflite ./models/
+        if [ -f ./notebooks/modèle_avancé/cnn_model_256_3_0.5.tflite ]; then
+          echo "Modèle TFLite trouvé."
+        else
+          echo "Erreur : Le modèle TFLite n'a pas été trouvé." && exit 1
+        fi
 
     # Étape 5 : Exécuter les tests (si nécessaire)
     # Vous pouvez ajouter ici une étape pour exécuter des tests unitaires
