@@ -1,3 +1,5 @@
+
+
 from flask import Flask, jsonify, render_template, request
 from threading import Thread
 from datetime import datetime
@@ -23,23 +25,25 @@ messages = []
 # Variables globales pour les modèles
 ft_model = None
 nlp = None
-lstm_model = None
+tflite_interpreter = None
 
 # Fonction pour charger tous les modèles en arrière-plan
 def load_all_models():
-    global lstm_model, nlp, ft_model
+    global tflite_interpreter
     try:
-        # Charger le modèle TensorFlow (Machine Learning)
-        print("Chargement du modèle TensorFlow...")
-        lstm_model = tf.keras.models.load_model('./models/LSTM_plus_Lemmatization_plus_FastText_model.h5')
+        # Charger le modèle TFLite (Machine Learning)
+        print("Chargement du modèle TFLite...")
+        tflite_interpreter = tf.lite.Interpreter(model_path='./notebooks/modèle_avancé/cnn_model_256_3_0.5.tflite')
+        tflite_interpreter.allocate_tensors()
         loading_progress["machine_learning_loaded"] = True
-        print("Modèle TensorFlow chargé.")
+        print("Modèle TFLite chargé.")
     except Exception as e:
-        print(f"Erreur lors du chargement du modèle TensorFlow: {e}")
+        print(f"Erreur lors du chargement du modèle TFLite: {e}")
 
     try:
         # Charger le modèle spaCy
         print("Chargement du modèle spaCy...")
+        global nlp
         nlp = spacy.load('en_core_web_sm')
         loading_progress["spacy_loaded"] = True
         print("Modèle spaCy initialisé.")
@@ -49,6 +53,7 @@ def load_all_models():
     try:
         # Charger le modèle FastText
         print("Chargement du modèle FastText...")
+        global ft_model
         ft_model = api.load('fasttext-wiki-news-subwords-300')
         loading_progress["fasttext_loaded"] = True
         print("Modèle FastText chargé.")
@@ -104,7 +109,7 @@ def chat():
 # Route pour envoyer un message
 @app.route('/send-message', methods=['POST'])
 def send_message():
-    global ft_model, nlp, lstm_model
+    global tflite_interpreter, ft_model, nlp
     data = request.get_json()
 
     # Vérifier si tous les modèles sont chargés
@@ -119,36 +124,48 @@ def send_message():
         # Prétraitement du message
         preprocessed_message = preprocess_text(message)
 
-        # Embedding FastText
+        # Créer l'embedding FastText pour le message
         words = preprocessed_message.split()
         embedding_matrix = create_embedding_matrix(words, ft_model)
 
-        # Utiliser le modèle LSTM pour la prédiction
-        try:
-            # Assure que embedding_matrix a la forme correcte
-            # Supposons que lstm_model attend (batch_size, sequence_length, embedding_dim)
-            # Ajuster la longueur de séquence, par exemple 100
-            max_length = 100
-            if len(embedding_matrix) < max_length:
-                padding = np.zeros((max_length - len(embedding_matrix), embedding_matrix.shape[1]))
-                embedding_matrix = np.vstack([embedding_matrix, padding])
-            else:
-                embedding_matrix = embedding_matrix[:max_length]
-            # Redimensionner à (1, max_length, embedding_dim)
-            embedding_matrix = np.expand_dims(embedding_matrix, axis=0)
-            prediction = lstm_model.predict(embedding_matrix)  # forme supposée (1, 1)
-            # Comparaison avec le sentiment attendu
-            predicted_sentiment = 1 if prediction[0][0] > 0.5 else 0  # Seuil pour définir positif/négatif
+        # Préparer les données pour le modèle TFLite
+        max_length = 100  # La longueur maximale attendue par le modèle
+        embedding_dim = 300  # Dimension des embeddings FastText
 
-            if predicted_sentiment == int(sentiment):
-                response = "J'ai bien compris tes sentiments."
-            else:
-                response = "Désolé, j'apprends encore, je n'ai pas bien compris tes sentiments."
-        except Exception as e:
-            print(f"Erreur lors de la prédiction: {e}")
-            return jsonify({'result': 'Erreur lors de l\'analyse du message.'}), 500
+        if len(embedding_matrix) < max_length:
+            # Si l'embedding est plus court que max_length, nous le complétons avec des zéros
+            padding = np.zeros((max_length - len(embedding_matrix), embedding_dim))
+            embedding_matrix = np.vstack([embedding_matrix, padding])
+        else:
+            # Si l'embedding est plus long, nous le tronquons à max_length
+            embedding_matrix = embedding_matrix[:max_length]
 
-        # Stocker les messages dans la liste avec les informations de temps
+        # Ajouter une dimension pour correspondre au batch size attendu par le modèle (1, max_length, embedding_dim)
+        input_data = np.expand_dims(embedding_matrix, axis=0)
+
+        # Préparer les entrées pour le modèle TFLite
+        input_details = tflite_interpreter.get_input_details()
+        output_details = tflite_interpreter.get_output_details()
+
+        # Charger les données dans le modèle
+        tflite_interpreter.set_tensor(input_details[0]['index'], input_data)
+
+        # Exécuter la prédiction
+        tflite_interpreter.invoke()
+
+        # Récupérer la sortie du modèle
+        prediction = tflite_interpreter.get_tensor(output_details[0]['index'])
+
+        # Interpréter la sortie : 1 = positif, 0 = négatif
+        predicted_sentiment = 1 if prediction[0][0] > 0.5 else 0
+
+        # Comparer le sentiment prédit avec le sentiment attendu
+        if predicted_sentiment == int(sentiment):
+            response = "J'ai bien compris tes sentiments."
+        else:
+            response = "Désolé, j'apprends encore, je n'ai pas bien compris tes sentiments."
+
+        # Stocker le message dans la liste des messages
         messages.append({
             'username': username,
             'message': message,
@@ -158,6 +175,7 @@ def send_message():
         })
 
         return jsonify({'result': response}), 200
+
     else:
         return jsonify({'result': 'Erreur lors de l\'envoi du message'}), 400
 

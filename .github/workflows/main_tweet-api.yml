@@ -1,66 +1,59 @@
-name: Deploy Flask API
+name: Deploy Flask API with TFLite Model
 
+# Ce workflow s'exécute lors des pushes sur la branche "main"
 on:
   push:
     branches:
-      - main  # Déclencher le déploiement sur chaque push sur la branche principale
+      - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
+    # Étape 1 : Récupérer le code source depuis le dépôt GitHub
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up Python
+    # Étape 2 : Configurer Python 3.11
+    - name: Set up Python 3.11
       uses: actions/setup-python@v2
       with:
         python-version: '3.11'
 
+    # Étape 3 : Installer les dépendances dans un environnement virtuel
     - name: Install dependencies
       run: |
+        python -m venv venv
+        source venv/bin/activate
         pip install --upgrade pip
         pip install -r requirements.txt
+        python -m spacy download en_core_web_sm  # Télécharger le modèle spaCy
 
-    - name: Unzip Machine Learning Model
+    # Étape 4 : Assurer que le modèle TFLite est bien placé dans le répertoire
+    - name: Upload TFLite Model
       run: |
-        echo "Décompression du modèle de machine learning..."
-        unzip ./models/LSTM_plus_Lemmatization_plus_FastText_model.zip -d ./models/
+        mkdir -p models
+        cp D:/Master_Openclassroom/Github/projet7-op/notebooks/modèle_avancé/cnn_model_256_3_0.5.tflite ./models/
 
-    - name: Preload Machine Learning Model
-      run: |
-        python - << END
-        import tensorflow as tf
+    # Étape 5 : Exécuter les tests (si nécessaire)
+    # Vous pouvez ajouter ici une étape pour exécuter des tests unitaires
+    # - name: Run tests
+    #   run: pytest
 
-        # Charger le modèle de machine learning
-        lstm_model = tf.keras.models.load_model('./models/LSTM_plus_Lemmatization_plus_FastText_model.h5')
-        print("Modèle de machine learning préchargé.")
-        END
-
-    - name: Preload spaCy Model
-      run: |
-        python - << END
-        import spacy
-
-        # Initialiser spaCy
-        nlp = spacy.load('en_core_web_sm')
-        print("Modèle spaCy préchargé.")
-        END
-
-    - name: Preload FastText Model
-      run: |
-        python - << END
-        import gensim.downloader as api
-
-        # Charger le modèle FastText
-        ft_model = api.load('fasttext-wiki-news-subwords-300')
-        print("Modèle FastText préchargé.")
-        END
-
+    # Étape 6 : Déployer l'application sur Azure App Service
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'tweet-api'
         publish-profile: ${{ secrets.AZURE_API }}
         package: .
+
+
+    # Étape 7 : Exécuter Flask (avec Gunicorn pour un environnement production si nécessaire)
+    - name: Start Flask server (Gunicorn)
+      run: |
+        source venv/bin/activate
+        gunicorn --workers 3 main:app
+
+
