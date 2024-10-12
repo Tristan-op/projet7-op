@@ -3,22 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bienvenue</title>
+    <title>Bienvenue sur S.A.R.A.</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        .action-button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Bienvenue</h1>
-    <p>L'API est prête à traiter les tweets.</p>
+    <h1>Bienvenue sur S.A.R.A. (Sentiment Analysis and Response Assistant)</h1>
+    <p>L'API S.A.R.A. est prête à analyser les sentiments des tweets et à fournir des prédictions basées sur vos messages.</p>
     <p>L'application conservera les tweets pendant 6 mois pour enrichir le modèle de prédiction.</p>
     <p>Si vous êtes d'accord avec cela, appuyez sur "OK". Sinon, appuyez sur "Exit".</p>
     
     <!-- Bouton OK -->
-    <form action="/continue">
-        <button type="submit">OK</button>
-    </form>
+    <button class="action-button" id="okButton">OK</button>
     
     <!-- Bouton Exit -->
-    <form action="/exit">
-        <button type="submit">Exit</button>
-    </form>
+    <button class="action-button" id="exitButton">Exit</button>
+
+    <script>
+        document.getElementById('okButton').addEventListener('click', function() {
+            // Rediriger vers la page chat.html
+            window.location.href = './chat.html';
+        });
+
+        document.getElementById('exitButton').addEventListener('click', function() {
+            // Rediriger vers une page d'arrêt ou autre action de sortie
+            window.location.href = './exit.html';
+        });
+    </script>
 </body>
 </html>
