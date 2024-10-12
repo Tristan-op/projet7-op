@@ -14,3 +14,4 @@ mlruns/
 __pycache__/
 *.pyc
 notebooks/.ipynb_checkpoints/Untitled-checkpoint.ipynb
+/models
