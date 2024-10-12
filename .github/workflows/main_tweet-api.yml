@@ -27,27 +27,25 @@ jobs:
         source venv/bin/activate
         pip install --upgrade pip
         pip install -r requirements.txt
-        python -m spacy download en_core_web_sm  # Télécharger le modèle spaCy
 
     # Étape 4 : Vérifier si le modèle TFLite est bien présent, installer spaCy, et télécharger les modèles
     - name: Download and prepare models
       run: |
-     # Vérifier si le modèle TFLite est bien présent
-     if [ -f ./notebooks/modèle_avancé/cnn_model_256_3_0.5.tflite ]; then
-       echo "Modèle TFLite déjà présent."
-     else
-       echo "Erreur : Le modèle TFLite n'a pas été trouvé." && exit 1
-     fi
+        # Vérifier si le modèle TFLite est bien présent
+        if [ -f ./notebooks/modèle_avancé/cnn_model_256_3_0.5.tflite ]; then
+          echo "Modèle TFLite déjà présent."
+        else
+          echo "Erreur : Le modèle TFLite n'a pas été trouvé." && exit 1
+        fi
 
-     # Assurer que spaCy est bien installé
-     pip install spacy
-    
-     # Télécharger le modèle spaCy
-     python -m spacy download en_core_web_sm
+        # Assurer que spaCy est bien installé
+        pip install spacy
 
-     # Charger le modèle FastText avec Gensim (précache les embeddings)
-     python -c "import gensim.downloader as api; api.load('fasttext-wiki-news-subwords-300')"
+        # Télécharger le modèle spaCy
+        python -m spacy download en_core_web_sm
 
+        # Charger le modèle FastText avec Gensim (précache les embeddings)
+        python -c "import gensim.downloader as api; api.load('fasttext-wiki-news-subwords-300')"
 
     # Étape 5 : Exécuter les tests (si nécessaire)
     # Vous pouvez ajouter ici une étape pour exécuter des tests unitaires
@@ -61,5 +59,3 @@ jobs:
         app-name: "nom_de_ton_app"
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: .
-
-
