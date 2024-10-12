@@ -31,11 +31,11 @@ tflite_interpreter = None
 def load_all_models():
     global tflite_interpreter
     try:
-        # Charger le modèle TFLite (Machine Learning)
+        # Charger le modèle TFLite
         print("Chargement du modèle TFLite...")
         tflite_interpreter = tf.lite.Interpreter(model_path='./notebooks/modèle_avancé/cnn_model_256_3_0.5.tflite')
         tflite_interpreter.allocate_tensors()
-        loading_progress["machine_learning_loaded"] = True
+        loading_progress["machine_learning_loaded"] = True  # Modèle chargé
         print("Modèle TFLite chargé.")
     except Exception as e:
         print(f"Erreur lors du chargement du modèle TFLite: {e}")
