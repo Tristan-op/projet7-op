@@ -20,8 +20,8 @@ with open(model_path, 'rb') as f:
 def load_spacy_model():
     try:
         # Charger le modèle Spacy depuis le disque
-        nlp = spacy.load('./model/spacy_model')
-        print("Modèle Spacy chargé depuis ./model/spacy_model")
+        nlp = spacy.load('./models/spacy_model')
+        print("Modèle Spacy chargé depuis ./models/spacy_model")
     except Exception as e:
         print(f"Erreur lors du chargement du modèle Spacy : {e}")
         raise e  # Relancer l'erreur pour gérer cela dans l'appelant
