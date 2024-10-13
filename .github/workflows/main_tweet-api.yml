@@ -51,18 +51,15 @@ jobs:
         # Charger le modèle FastText avec Gensim (précache les embeddings)
         python -c "import gensim.downloader as api; api.load('fasttext-wiki-news-subwords-300')"
 
-    # Étape 6 : Déployer l'application sur Azure App Service
+    # Étape 5 : Déployer l'application sur Azure App Service
     - name: Deploy to Azure Web App
-      run: |
-        source venv/bin/activate
-        az webapp up --name 'tweet-api' --sku F1 --location 'westeurope' --resource-group 'your-resource-group'
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'tweet-api'
         publish-profile: ${{ secrets.AZURE_API }}
         package: .
 
-    # Étape 7 : Exécuter Flask (avec Gunicorn pour un environnement production si nécessaire)
+    # Étape 6 : Exécuter Flask (avec Gunicorn pour un environnement production si nécessaire)
     - name: Start Flask server (Gunicorn)
       run: |
         source venv/bin/activate
