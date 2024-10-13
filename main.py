@@ -7,7 +7,7 @@ import re
 app = Flask(__name__)
 
 # Charger le modèle et les composants de transformation
-model_path = './models/Stemming_plus_CountVectorizer_plus_TF-IDF_model.pkl'
+model_path = './models/best_model.pkl'
 with open(model_path, 'rb') as f:
     model = pickle.load(f)
 
