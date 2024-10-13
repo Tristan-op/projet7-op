@@ -1,7 +1,8 @@
 from flask import Flask, render_template, request, jsonify
 import pickle
 from sklearn.feature_extraction.text import CountVectorizer
-import spacy  # Bibliothèque pour la lemmatisation
+import spacy
+import spacy.cli  # Bibliothèque pour la lemmatisation
 import re
 from datetime import datetime
 
@@ -21,9 +22,10 @@ def load_spacy_model():
         # Charger le modèle s'il est déjà installé
         nlp = spacy.load('en_core_web_sm')
     except OSError:
-        # Si le modèle n'est pas trouvé, le télécharger et le charger
-        print("Le modèle 'en_core_web_sm' n'a pas été trouvé. Téléchargement en cours...")
-        os.system("python -m spacy download en_core_web_sm")
+        # Si le modèle n'est pas trouvé, le télécharger en utilisant spacy.cli
+        print("Le modèle 'en_core_web_sm' n'a pas été trouvé. Téléchargement en cours avec spacy.cli...")
+        spacy.cli.download("en_core_web_sm")
+        # Charger le modèle après téléchargement
         nlp = spacy.load('en_core_web_sm')
     return nlp
 
