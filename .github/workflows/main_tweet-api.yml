@@ -59,8 +59,3 @@ jobs:
         publish-profile: ${{ secrets.AZURE_API }}
         package: .
 
-    # Étape 6 : Exécuter Flask (avec Gunicorn pour un environnement production si nécessaire)
-    - name: Start Flask server (Gunicorn)
-      run: |
-        source venv/bin/activate
-        gunicorn --workers 3 main:app
