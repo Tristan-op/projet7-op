@@ -5,10 +5,10 @@ import spacy
 import spacy.cli  # Bibliothèque pour la lemmatisation
 import re
 from datetime import datetime
+from applicationinsights import TelemetryClient  # Import Azure Insights SDK
 
+# Initialisation de l'application Flask
 app = Flask(__name__)
-
-
 
 # Charger le modèle et le CountVectorizer depuis le fichier pickle
 model_path = './models/best_model_with_vectorizer.pkl'
@@ -17,6 +17,7 @@ with open(model_path, 'rb') as f:
     model = data['model']
     count_vectorizer = data['vectorizer']
 
+# Charger le modèle Spacy
 def load_spacy_model():
     try:
         # Charger le modèle Spacy depuis le disque
@@ -27,15 +28,21 @@ def load_spacy_model():
         raise e  # Relancer l'erreur pour gérer cela dans l'appelant
     return nlp
 
-# Charger le modèle Spacy au démarrage de l'application
 nlp = load_spacy_model()
 
+# Fonction de prétraitement du texte
 def preprocess_text(text):
     """ Prétraitement du texte : nettoyage, lemmatisation """
     text = re.sub(r'[^\w\s]', '', text.lower())  # Nettoyer les caractères spéciaux
     doc = nlp(text)
     lemmatized_words = [token.lemma_ for token in doc]
     return ' '.join(lemmatized_words)
+
+# Initialisation de TelemetryClient pour Application Insights
+tc = TelemetryClient('9ea1ad3d-2949-4e6f-a84b-4555cb14bd23')
+
+# Simuler une base de données en mémoire pour stocker les messages
+messages = []
 
 @app.route('/')
 def home():
@@ -50,7 +57,6 @@ def chat():
 def chat_history():
     return jsonify({'messages': messages})
 
-
 @app.route('/send-message', methods=['POST'])
 def send_message():
     try:
@@ -62,70 +68,59 @@ def send_message():
 
         username = data['username']
         message = data['message']
-
-        try:
-            sentiment = int(data['sentiment'])  # Le sentiment doit être un entier (0 ou 1)
-        except ValueError:
-            return jsonify({'result': 'Erreur : Le sentiment doit être un entier (0 ou 1)'}), 400
+        sentiment = int(data['sentiment'])  # Le sentiment doit être un entier (0 ou 1)
 
         # Prétraitement du message avec la lemmatisation
-        try:
-            preprocessed_message = preprocess_text(message)
-        except Exception as e:
-            return jsonify({'result': f'Erreur lors du prétraitement du texte : {str(e)}'}), 500
+        preprocessed_message = preprocess_text(message)
 
         # Vectorisation du message avec le CountVectorizer ajusté
-        try:
-            message_vect = count_vectorizer.transform([preprocessed_message])
-        except Exception as e:
-            return jsonify({'result': f'Erreur lors de la vectorisation du message : {str(e)}'}), 500
+        message_vect = count_vectorizer.transform([preprocessed_message])
 
         # Faire la prédiction avec le modèle de régression logistique
-        try:
-            prediction = model.predict(message_vect)
-            predicted_sentiment = 1 if prediction[0] > 0.5 else 0  # Si la prédiction est supérieure à 0.5, c'est "Positif"
-        except Exception as e:
-            return jsonify({'result': f'Erreur lors de la prédiction du modèle : {str(e)}'}), 500
+        prediction = model.predict(message_vect)
+        predicted_sentiment = 1 if prediction[0] > 0.5 else 0  # Si la prédiction est supérieure à 0.5, c'est "Positif"
 
         # Comparer le sentiment prédit avec le sentiment fourni
-        try:
-            if predicted_sentiment == sentiment:
-                response = "J'ai bien compris tes sentiments."
-            else:
-                response = "Désolé, je n'ai pas bien compris tes sentiments."
-        except Exception as e:
-            return jsonify({'result': f'Erreur lors de la comparaison des sentiments : {str(e)}'}), 500
+        if predicted_sentiment == sentiment:
+            response = "J'ai bien compris tes sentiments."
+            tc.track_event('CorrectPrediction', {'username': username, 'message': message}, {'sentiment': sentiment, 'predicted_sentiment': predicted_sentiment})
+        else:
+            response = "Désolé, je n'ai pas bien compris tes sentiments."
+            tc.track_event('IncorrectPrediction', {'username': username, 'message': message}, {'sentiment': sentiment, 'predicted_sentiment': predicted_sentiment})
+
+        # Incrémentation des prédictions correctes ou incorrectes
+        if predicted_sentiment == sentiment:
+            tc.track_metric('CorrectPredictions', 1)
+        else:
+            tc.track_metric('IncorrectPredictions', 1)
 
         # Stocker le message de l'utilisateur dans une base de données simulée
-        try:
-            messages.append({
-                'username': username,
-                'message': message,
-                'sentiment': 'Positif' if sentiment == 1 else 'Négatif',  # Sentiment donné par l'utilisateur
-                'predicted_sentiment': 'Positif' if predicted_sentiment == 1 else 'Négatif',  # Prédiction du modèle
-                'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            })
+        messages.append({
+            'username': username,
+            'message': message,
+            'sentiment': 'Positif' if sentiment == 1 else 'Négatif',  # Sentiment donné par l'utilisateur
+            'predicted_sentiment': 'Positif' if predicted_sentiment == 1 else 'Négatif',  # Prédiction du modèle
+            'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
 
-            # Stocker également la réponse du modèle avec le nom "S.A.R.A"
-            messages.append({
-                'username': 'S.A.R.A',
-                'message': response,
-                'sentiment': '',
-                'predicted_sentiment': '',
-                'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            })
-        except Exception as e:
-            return jsonify({'result': f'Erreur lors de l\'enregistrement des messages : {str(e)}'}), 500
+        # Stocker également la réponse du modèle avec le nom "S.A.R.A"
+        messages.append({
+            'username': 'S.A.R.A',
+            'message': response,
+            'sentiment': '',
+            'predicted_sentiment': '',
+            'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
+
+        # Envoyer les données à Azure Application Insights
+        tc.flush()
 
         return jsonify({'result': response}), 200
 
     except Exception as e:
-        print(f"Erreur inattendue : {e}")
-        return jsonify({'result': f'Erreur inattendue : {e}'}), 500
+        print(f"Erreur lors de l'envoi du message : {e}")
+        return jsonify({'result': 'Erreur lors de l\'envoi du message'}), 500
 
-
-# Simuler une base de données en mémoire pour stocker les messages
-messages = []
 @app.route('/adm')
 def admin_view():
     # Passer les messages à la page d'administration
