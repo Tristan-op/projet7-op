@@ -23,12 +23,15 @@ jobs:
     # Étape 3 : Installer les dépendances dans un environnement virtuel
     - name: Install dependencies
       run: |
+        python -m venv venv
+        source venv/bin/activate
         pip install --upgrade pip
         pip install -r requirements.txt
 
     # Étape 4 : Vérifier si le modèle TFLite est bien présent, installer spaCy et gensim, et télécharger les modèles
     - name: Download and prepare models
       run: |
+        source venv/bin/activate
         # Vérifier si le modèle TFLite est bien présent
         if [ -f ./notebooks/modèle_avancé/cnn_model_256_3_0.5.tflite ]; then
           echo "Modèle TFLite déjà présent."
@@ -50,6 +53,9 @@ jobs:
 
     # Étape 6 : Déployer l'application sur Azure App Service
     - name: Deploy to Azure Web App
+      run: |
+        source venv/bin/activate
+        az webapp up --name 'tweet-api' --sku F1 --location 'westeurope' --resource-group 'your-resource-group'
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'tweet-api'
@@ -61,6 +67,3 @@ jobs:
       run: |
         source venv/bin/activate
         gunicorn --workers 3 main:app
-
-
-
