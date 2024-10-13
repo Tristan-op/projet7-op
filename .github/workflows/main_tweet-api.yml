@@ -1,26 +1,26 @@
-name: Deploy Flask API with TFLite Model
+name: Deploy Flask API with Gunicorn to Azure
 
 on:
   push:
     branches:
-      - main
+      - main  # Remplace par la branche que tu veux utiliser
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    # Étape 1 : Récupérer le code source depuis le dépôt GitHub
-    - name: Checkout code
+    # Étape 1 : Checkout du code source depuis GitHub
+    - name: Checkout repository
       uses: actions/checkout@v2
 
-    # Étape 2 : Configurer Python 3.11
-    - name: Set up Python 3.11
+    # Étape 2 : Configuration de Python 3.11
+    - name: Setup Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.11'
 
-    # Étape 3 : Installer les dépendances dans un environnement virtuel
+    # Étape 3 : Installation des dépendances
     - name: Install dependencies
       run: |
         python -m venv venv
@@ -28,28 +28,12 @@ jobs:
         pip install --upgrade pip
         pip install -r requirements.txt
 
-    # Étape 4 : Vérifier si le modèle TFLite est bien présent, installer spaCy et gensim, et télécharger les modèles
-    - name: Download and prepare models
+    # Étape 4 : Vérifier si le modèle est bien présent
+    - name: Verify model presence
       run: |
-        source venv/bin/activate
-        # Vérifier si le modèle TFLite est bien présent
-        if [ -f ./notebooks/modèle_avancé/cnn_model_256_3_0.5.tflite ]; then
-          echo "Modèle TFLite déjà présent."
-        else
-          echo "Erreur : Le modèle TFLite n'a pas été trouvé." && exit 1
+        if [ ! -f ./models/best_model_with_vectorizer.pkl ]; then
+          echo "Erreur : Le modèle n'a pas été trouvé." && exit 1
         fi
-
-        # Assurer que spaCy est bien installé
-        pip install spacy
-
-        # Télécharger le modèle spaCy
-        python -m spacy download en_core_web_sm
-        
-        # Assurer que Gensim est bien installé
-        pip install gensim
-
-        # Charger le modèle FastText avec Gensim (précache les embeddings)
-        python -c "import gensim.downloader as api; api.load('fasttext-wiki-news-subwords-300')"
 
     # Étape 5 : Déployer l'application sur Azure App Service
     - name: Deploy to Azure Web App
@@ -59,3 +43,8 @@ jobs:
         publish-profile: ${{ secrets.AZURE_API }}
         package: .
 
+    # Étape 6 : Lancer l'application avec Gunicorn
+    - name: Start Flask API with Gunicorn
+      run: |
+        source venv/bin/activate
+        gunicorn --workers 3 main:app

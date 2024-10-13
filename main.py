@@ -1,30 +1,28 @@
 from flask import Flask, render_template, request, jsonify
 import pickle
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-from nltk.stem import PorterStemmer
+from sklearn.feature_extraction.text import CountVectorizer
+import spacy  # Bibliothèque pour la lemmatisation
 import re
+from datetime import datetime
 
 app = Flask(__name__)
 
-# Charger le modèle et les composants de transformation
-model_path = './models/best_model.pkl'
+# Charger le modèle et le CountVectorizer depuis le fichier pickle
+model_path = './models/best_model_with_vectorizer.pkl'
 with open(model_path, 'rb') as f:
-    model = pickle.load(f)
+    data = pickle.load(f)
+    model = data['model']
+    count_vectorizer = data['vectorizer']
 
-# Initialiser les objets nécessaires (vectorizer, TF-IDF, etc.)
-count_vectorizer = model['vectorizer']
-tfidf_transformer = model['tfidf']
-linear_model = model['model']
-
-# Stemming
-stemmer = PorterStemmer()
+# Charger le modèle de langue de spaCy pour la lemmatisation
+nlp = spacy.load('en_core_web_sm')
 
 def preprocess_text(text):
-    """ Prétraitement du texte : nettoyage, stemming """
+    """ Prétraitement du texte : nettoyage, lemmatisation """
     text = re.sub(r'[^\w\s]', '', text.lower())  # Nettoyer les caractères spéciaux
-    words = text.split()
-    stemmed_words = [stemmer.stem(word) for word in words]
-    return ' '.join(stemmed_words)
+    doc = nlp(text)
+    lemmatized_words = [token.lemma_ for token in doc]
+    return ' '.join(lemmatized_words)
 
 @app.route('/')
 def home():
@@ -32,37 +30,73 @@ def home():
 
 @app.route('/chat')
 def chat():
-    return render_template("chat.html")
+    # Passer les messages à la page chat
+    return render_template("chat.html", messages=messages)
+
+@app.route('/chat-history', methods=['GET'])
+def chat_history():
+    return jsonify({'messages': messages})
+
 
 @app.route('/send-message', methods=['POST'])
 def send_message():
-    data = request.get_json()
+    try:
+        data = request.get_json()
 
-    if 'username' in data and 'message' in data and 'sentiment' in data:
+        # Vérifier que les champs nécessaires sont présents
+        if 'username' not in data or 'message' not in data or 'sentiment' not in data:
+            return jsonify({'result': 'Données invalides, certains champs manquent'}), 400
+
         username = data['username']
         message = data['message']
-        sentiment = data['sentiment']
+        sentiment = int(data['sentiment'])  # Le sentiment doit être un entier (0 ou 1)
 
-        # Prétraitement du message avec le stemming
+        # Prétraitement du message avec la lemmatisation
         preprocessed_message = preprocess_text(message)
 
-        # Vectorisation et transformation TF-IDF
+        # Vectorisation du message avec le CountVectorizer ajusté
         message_vect = count_vectorizer.transform([preprocessed_message])
-        message_tfidf = tfidf_transformer.transform(message_vect)
 
-        # Faire la prédiction avec le modèle de régression linéaire
-        prediction = linear_model.predict(message_tfidf)
-        predicted_sentiment = 1 if prediction[0] > 0.5 else 0
+        # Faire la prédiction avec le modèle de régression logistique
+        prediction = model.predict(message_vect)
+        predicted_sentiment = 1 if prediction[0] > 0.5 else 0  # Si la prédiction est supérieure à 0.5, c'est "Positif"
 
         # Comparer le sentiment prédit avec le sentiment fourni
-        if predicted_sentiment == int(sentiment):
+        if predicted_sentiment == sentiment:
             response = "J'ai bien compris tes sentiments."
         else:
             response = "Désolé, je n'ai pas bien compris tes sentiments."
 
+        # Stocker le message de l'utilisateur dans une base de données simulée
+        messages.append({
+            'username': username,
+            'message': message,
+            'sentiment': 'Positif' if sentiment == 1 else 'Négatif',  # Sentiment donné par l'utilisateur
+            'predicted_sentiment': 'Positif' if predicted_sentiment == 1 else 'Négatif',  # Prédiction du modèle
+            'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
+
+        # Stocker également la réponse du modèle avec le nom "S.A.R.A"
+        messages.append({
+            'username': 'S.A.R.A',
+            'message': response,
+            'sentiment': '',
+            'predicted_sentiment': '',
+            'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
+
         return jsonify({'result': response}), 200
-    else:
-        return jsonify({'result': 'Données invalides'}), 400
+
+    except Exception as e:
+        print(f"Erreur lors de l'envoi du message : {e}")
+        return jsonify({'result': 'Erreur lors de l\'envoi du message'}), 500
+
+# Simuler une base de données en mémoire pour stocker les messages
+messages = []
+@app.route('/adm')
+def admin_view():
+    # Passer les messages à la page d'administration
+    return render_template("adm.html", messages=messages)
 
 @app.route('/exit')
 def exit_app():

@@ -3,119 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat</title>
-    <script>
-        let isSending = false;  // Variable pour suivre l'état d'envoi du message
+    <title>Application de Chat</title>
+</head>
+<body>
+    <h1>Application de Chat</h1>
 
-        function checkForm() {
-            const username = document.getElementById('username').value;
-            const message = document.getElementById('messageContent').value;
-            const sentiment = document.querySelector('input[name="sentiment"]:checked');
-            document.getElementById('submitBtn').disabled = !(username && message && sentiment) || isSending;
+    <!-- Formulaire d'envoi de message -->
+    <form id="messageForm">
+        <label for="username">Nom d'utilisateur:</label>
+        <input type="text" id="username" name="username" required>
+
+        <label for="message">Message:</label>
+        <textarea id="message" name="message" required></textarea>
+
+        <label for="sentiment">Sentiment (0 = Négatif, 1 = Positif):</label>
+        <input type="number" id="sentiment" name="sentiment" min="0" max="1" required>
+
+        <button type="submit">Envoyer</button>
+    </form>
+
+    <!-- Affichage de l'historique des messages -->
+    <h2>Historique des messages</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Nom d'utilisateur</th>
+                <th>Message</th>
+                <th>Sentiment</th>
+                <th>Prédiction</th>
+                <th>Heure</th>
+            </tr>
+        </thead>
+        <tbody id="messageHistory">
+            <!-- Les messages seront insérés ici via JavaScript -->
+        </tbody>
+    </table>
+
+    <script>
+        // Fonction pour mettre à jour l'historique des messages
+        function updateMessageHistory(messages) {
+            const historyTable = document.getElementById('messageHistory');
+            historyTable.innerHTML = ''; // Réinitialiser l'historique
+
+            messages.forEach(msg => {
+                const row = document.createElement('tr');
+
+                // Nom d'utilisateur
+                const usernameCell = document.createElement('td');
+                usernameCell.textContent = msg.username;
+                row.appendChild(usernameCell);
+
+                // Message
+                const messageCell = document.createElement('td');
+                messageCell.textContent = msg.message;
+                row.appendChild(messageCell);
+
+                // Sentiment
+                const sentimentCell = document.createElement('td');
+                sentimentCell.textContent = msg.sentiment ? (msg.sentiment == 'Positif' ? 'Positif' : 'Négatif') : '';
+                row.appendChild(sentimentCell);
+
+                // Prédiction
+                const predictedSentimentCell = document.createElement('td');
+                predictedSentimentCell.textContent = msg.predicted_sentiment ? (msg.predicted_sentiment == 'Positif' ? 'Positif' : 'Négatif') : '';
+                row.appendChild(predictedSentimentCell);
+
+                // Heure
+                const timeCell = document.createElement('td');
+                timeCell.textContent = msg.time;
+                row.appendChild(timeCell);
+
+                // Ajouter la ligne au tableau
+                historyTable.appendChild(row);
+            });
         }
 
-        function sendMessage() {
-            if (isSending) return; // Ne pas envoyer si une requête est déjà en cours
+        // Soumission du formulaire
+        document.getElementById('messageForm').addEventListener('submit', function(event) {
+            event.preventDefault();
 
             const username = document.getElementById('username').value;
-            const message = document.getElementById('messageContent').value;
-            const sentiment = document.querySelector('input[name="sentiment"]:checked').value;
-
-            // Désactiver le bouton d'envoi et afficher la barre de chargement pendant la requête
-            isSending = true;
-            document.getElementById('submitBtn').disabled = true;
-            document.getElementById('loadingBar').style.display = 'block';
+            const message = document.getElementById('message').value;
+            const sentiment = document.getElementById('sentiment').value;
 
             fetch('/send-message', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ username, message, sentiment })
             })
             .then(response => response.json())
             .then(data => {
                 alert(data.result);
-                loadChatHistory();
+                // Appeler une fonction pour mettre à jour l'historique après l'envoi du message
+                loadMessageHistory();
             })
             .catch(error => {
-                alert('Erreur lors de l\'envoi du message');
-            })
-            .finally(() => {
-                isSending = false;  // Réactiver l'envoi une fois la réponse reçue
-                document.getElementById('submitBtn').disabled = false;
-                document.getElementById('loadingBar').style.display = 'none';
-                checkForm();  // Vérifier de nouveau si les champs sont remplis
+                console.error('Erreur:', error);
             });
-        }
+        });
 
-        function loadChatHistory() {
+        // Fonction pour charger l'historique des messages
+        function loadMessageHistory() {
             fetch('/chat-history')
             .then(response => response.json())
             .then(data => {
-                const chatHistory = document.getElementById('chatHistory');
-                chatHistory.innerHTML = '';
-                data.messages.forEach(msg => {
-                    chatHistory.innerHTML += `<p><strong>${msg.username}</strong> (${msg.time}): ${msg.message}</p>`;
-                });
+                updateMessageHistory(data.messages);
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement de l\'historique des messages:', error);
             });
         }
 
-        window.onload = loadChatHistory;
+        // Charger l'historique des messages lorsque la page est chargée
+        window.onload = function() {
+            loadMessageHistory();
+        };
     </script>
-    <style>
-        /* Style pour la barre de chargement */
-        #loadingBar {
-            width: 100%;
-            height: 5px;
-            background-color: #f3f3f3;
-            display: none;
-        }
-
-        #loadingBar div {
-            width: 0%;
-            height: 100%;
-            background-color: #4caf50;
-            animation: loading 2s infinite;
-        }
-
-        @keyframes loading {
-            0% { width: 0%; }
-            100% { width: 100%; }
-        }
-    </style>
-</head>
-<body>
-    <h1>Chat</h1>
-
-    <!-- Historique des messages -->
-    <div id="chatHistory"></div>
-
-    <!-- Barre de chargement -->
-    <div id="loadingBar">
-        <div></div>
-    </div>
-
-    <!-- Formulaire d'envoi de message -->
-    <form id="messageForm">
-        <label for="username">Nom d'utilisateur :</label>
-        <input type="text" id="username" name="username" oninput="checkForm()"><br><br>
-
-        <label for="messageContent">Message :</label>
-        <textarea id="messageContent" name="message" rows="4" cols="50" oninput="checkForm()"></textarea><br><br>
-
-        <label for="sentiment">Sentiment :</label><br>
-        <input type="radio" id="positif" name="sentiment" value="1" onclick="checkForm()">
-        <label for="positif">Positif</label><br>
-        <input type="radio" id="negatif" name="sentiment" value="0" onclick="checkForm()">
-        <label for="negatif">Négatif</label><br><br>
-
-        <button type="button" id="submitBtn" disabled onclick="sendMessage()">Envoyer</button>
-    </form>
-
-    <!-- Bouton Exit placé en bas de la page -->
-    <form action="/exit" method="POST">
-        <button type="submit" style="margin-top: 20px;">Exit</button>
-    </form>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vue Administrateur</title>
+    <title>Liste des messages</title>
 </head>
 <body>
     <h1>Liste des messages</h1>
@@ -22,9 +22,9 @@
             <tr>
                 <td>{{ msg.username }}</td>
                 <td>{{ msg.message }}</td>
-                <td>{{ 'Positif' if msg.sentiment == 1 else 'Négatif' }}</td>
-                <td>{{ 'Positif' if msg.prediction == 1 else 'Négatif' }}</td>
-                <td>{{ msg.time }}</td>  <!-- Affichage de l'heure -->
+                <td>{{ msg.sentiment }}</td>
+                <td>{{ msg.predicted_sentiment }}</td>
+                <td>{{ msg.time }}</td>
             </tr>
             {% endfor %}
         </tbody>
