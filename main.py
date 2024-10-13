@@ -19,17 +19,16 @@ with open(model_path, 'rb') as f:
 
 def load_spacy_model():
     try:
-        # Charger le modèle s'il est déjà installé
-        nlp = spacy.load('en_core_web_sm')
-    except OSError:
-        # Si le modèle n'est pas trouvé, le télécharger en utilisant spacy.cli
-        print("Le modèle 'en_core_web_sm' n'a pas été trouvé. Téléchargement en cours avec spacy.cli...")
-        spacy.cli.download("en_core_web_sm")
-        # Charger le modèle après téléchargement
-        nlp = spacy.load('en_core_web_sm')
+        # Charger le modèle Spacy depuis le disque
+        nlp = spacy.load('./model/spacy_model')
+        print("Modèle Spacy chargé depuis ./model/spacy_model")
+    except Exception as e:
+        print(f"Erreur lors du chargement du modèle Spacy : {e}")
+        raise e  # Relancer l'erreur pour gérer cela dans l'appelant
     return nlp
 
-
+# Charger le modèle Spacy au démarrage de l'application
+nlp = load_spacy_model()
 
 def preprocess_text(text):
     """ Prétraitement du texte : nettoyage, lemmatisation """

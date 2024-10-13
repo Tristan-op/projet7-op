@@ -15,9 +15,6 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 # Activer l'environnement virtuel
 source venv/bin/activate
 
-# Télécharger le modèle SpaCy si non présent
-python -m spacy download en_core_web_sm
-
 
 END
 source venv/bin/activate

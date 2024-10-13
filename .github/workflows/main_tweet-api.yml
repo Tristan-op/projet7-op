@@ -27,7 +27,7 @@ jobs:
           source venv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
-          python -m spacy download en_core_web_sm  # Téléchargement du modèle SpaCy
+          
 
       # Étape 4 : Vérifier si le modèle est bien présent
       - name: Verify model presence
