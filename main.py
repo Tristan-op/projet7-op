@@ -7,6 +7,8 @@ from datetime import datetime
 
 app = Flask(__name__)
 
+
+
 # Charger le modèle et le CountVectorizer depuis le fichier pickle
 model_path = './models/best_model_with_vectorizer.pkl'
 with open(model_path, 'rb') as f:
@@ -14,8 +16,18 @@ with open(model_path, 'rb') as f:
     model = data['model']
     count_vectorizer = data['vectorizer']
 
-# Charger le modèle de langue de spaCy pour la lemmatisation
-nlp = spacy.load('en_core_web_sm')
+def load_spacy_model():
+    try:
+        # Charger le modèle s'il est déjà installé
+        nlp = spacy.load('en_core_web_sm')
+    except OSError:
+        # Si le modèle n'est pas trouvé, le télécharger et le charger
+        print("Le modèle 'en_core_web_sm' n'a pas été trouvé. Téléchargement en cours...")
+        os.system("python -m spacy download en_core_web_sm")
+        nlp = spacy.load('en_core_web_sm')
+    return nlp
+
+
 
 def preprocess_text(text):
     """ Prétraitement du texte : nettoyage, lemmatisation """
