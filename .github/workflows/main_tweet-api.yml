@@ -23,8 +23,6 @@ jobs:
     # Étape 3 : Installer les dépendances dans un environnement virtuel
     - name: Install dependencies
       run: |
-        python -m venv venv
-        source venv/bin/activate
         pip install --upgrade pip
         pip install -r requirements.txt
 
