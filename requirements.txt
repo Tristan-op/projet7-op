@@ -10,6 +10,8 @@ tensorflow==2.12.0
 spacy==3.5.1
 gensim==4.3.1
 numpy==1.23.5
+scikit-learn==1.2.2
+nltk==3.8.1
 
 # Gunicorn pour le déploiement
 gunicorn==20.1.0
