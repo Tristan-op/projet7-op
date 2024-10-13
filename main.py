@@ -61,47 +61,67 @@ def send_message():
 
         username = data['username']
         message = data['message']
-        sentiment = int(data['sentiment'])  # Le sentiment doit être un entier (0 ou 1)
+
+        try:
+            sentiment = int(data['sentiment'])  # Le sentiment doit être un entier (0 ou 1)
+        except ValueError:
+            return jsonify({'result': 'Erreur : Le sentiment doit être un entier (0 ou 1)'}), 400
 
         # Prétraitement du message avec la lemmatisation
-        preprocessed_message = preprocess_text(message)
+        try:
+            preprocessed_message = preprocess_text(message)
+        except Exception as e:
+            return jsonify({'result': f'Erreur lors du prétraitement du texte : {str(e)}'}), 500
 
         # Vectorisation du message avec le CountVectorizer ajusté
-        message_vect = count_vectorizer.transform([preprocessed_message])
+        try:
+            message_vect = count_vectorizer.transform([preprocessed_message])
+        except Exception as e:
+            return jsonify({'result': f'Erreur lors de la vectorisation du message : {str(e)}'}), 500
 
         # Faire la prédiction avec le modèle de régression logistique
-        prediction = model.predict(message_vect)
-        predicted_sentiment = 1 if prediction[0] > 0.5 else 0  # Si la prédiction est supérieure à 0.5, c'est "Positif"
+        try:
+            prediction = model.predict(message_vect)
+            predicted_sentiment = 1 if prediction[0] > 0.5 else 0  # Si la prédiction est supérieure à 0.5, c'est "Positif"
+        except Exception as e:
+            return jsonify({'result': f'Erreur lors de la prédiction du modèle : {str(e)}'}), 500
 
         # Comparer le sentiment prédit avec le sentiment fourni
-        if predicted_sentiment == sentiment:
-            response = "J'ai bien compris tes sentiments."
-        else:
-            response = "Désolé, je n'ai pas bien compris tes sentiments."
+        try:
+            if predicted_sentiment == sentiment:
+                response = "J'ai bien compris tes sentiments."
+            else:
+                response = "Désolé, je n'ai pas bien compris tes sentiments."
+        except Exception as e:
+            return jsonify({'result': f'Erreur lors de la comparaison des sentiments : {str(e)}'}), 500
 
         # Stocker le message de l'utilisateur dans une base de données simulée
-        messages.append({
-            'username': username,
-            'message': message,
-            'sentiment': 'Positif' if sentiment == 1 else 'Négatif',  # Sentiment donné par l'utilisateur
-            'predicted_sentiment': 'Positif' if predicted_sentiment == 1 else 'Négatif',  # Prédiction du modèle
-            'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        })
+        try:
+            messages.append({
+                'username': username,
+                'message': message,
+                'sentiment': 'Positif' if sentiment == 1 else 'Négatif',  # Sentiment donné par l'utilisateur
+                'predicted_sentiment': 'Positif' if predicted_sentiment == 1 else 'Négatif',  # Prédiction du modèle
+                'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            })
 
-        # Stocker également la réponse du modèle avec le nom "S.A.R.A"
-        messages.append({
-            'username': 'S.A.R.A',
-            'message': response,
-            'sentiment': '',
-            'predicted_sentiment': '',
-            'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        })
+            # Stocker également la réponse du modèle avec le nom "S.A.R.A"
+            messages.append({
+                'username': 'S.A.R.A',
+                'message': response,
+                'sentiment': '',
+                'predicted_sentiment': '',
+                'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            })
+        except Exception as e:
+            return jsonify({'result': f'Erreur lors de l\'enregistrement des messages : {str(e)}'}), 500
 
         return jsonify({'result': response}), 200
 
     except Exception as e:
-        print(f"Erreur lors de l'envoi du message : {e}")
-        return jsonify({'result': 'Erreur lors de l\'envoi du message'}), 500
+        print(f"Erreur inattendue : {e}")
+        return jsonify({'result': f'Erreur inattendue : {e}'}), 500
+
 
 # Simuler une base de données en mémoire pour stocker les messages
 messages = []
