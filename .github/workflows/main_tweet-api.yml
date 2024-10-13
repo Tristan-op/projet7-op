@@ -9,43 +9,42 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
-    steps:
-    # Étape 1 : Checkout du code source depuis GitHub
-    - name: Checkout repository
-      uses: actions/checkout@v2
+steps:
+  # Étape 1 : Checkout du code source depuis GitHub
+  - name: Checkout repository
+    uses: actions/checkout@v2
 
-    # Étape 2 : Configuration de Python 3.11
-    - name: Setup Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.11'
+  # Étape 2 : Configuration de Python 3.11
+  - name: Setup Python
+    uses: actions/setup-python@v2
+    with:
+      python-version: '3.11'
 
-    # Étape 3 : Installation des dépendances
-    - name: Install dependencies
-      run: |
-        python -m venv venv
-        source venv/bin/activate
-        pip install --upgrade pip
-	sudo apt-get install -y libopenblas-dev gfortran libatlas-base-dev
-        pip install -r requirements.txt
+  # Étape 3 : Installation des dépendances
+  - name: Install dependencies
+    run: |
+      python -m venv venv
+      source venv/bin/activate
+      pip install --upgrade pip
+      sudo apt-get install -y libopenblas-dev gfortran libatlas-base-dev
+      pip install -r requirements.txt
 
-    # Étape 4 : Vérifier si le modèle est bien présent
-    - name: Verify model presence
-      run: |
-        if [ ! -f ./models/best_model_with_vectorizer.pkl ]; then
-          echo "Erreur : Le modèle n'a pas été trouvé." && exit 1
-        fi
+  # Étape 4 : Vérifier si le modèle est bien présent
+  - name: Verify model presence
+    run: |
+      if [ ! -f ./models/best_model_with_vectorizer.pkl ]; then
+        echo "Erreur : Le modèle n'a pas été trouvé." && exit 1
+      fi
+   # Étape 5 : Déployer l'application sur Azure App Service
+   - name: Deploy to Azure Web App
+     uses: azure/webapps-deploy@v2
+     with:
+       app-name: 'tweet-api'
+       publish-profile: ${{ secrets.AZURE_API }}
+       package: .
 
-    # Étape 5 : Déployer l'application sur Azure App Service
-    - name: Deploy to Azure Web App
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: 'tweet-api'
-        publish-profile: ${{ secrets.AZURE_API }}
-        package: .
-
-    # Étape 6 : Lancer l'application avec Gunicorn
-    - name: Start Flask API with Gunicorn
-      run: |
-        source venv/bin/activate
-        gunicorn --workers 3 main:app
+   # Étape 6 : Lancer l'application avec Gunicorn
+   - name: Start Flask API with Gunicorn
+     run: |
+       source venv/bin/activate
+       gunicorn --workers 3 main:app
