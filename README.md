@@ -28,8 +28,8 @@ projet7-op/
  ├── welcome.html 
  ├── predict.html 
  ├── test.html 	     	# Interface de test pour soumettre des tweets 
- ├──adm.html 		      	# Interface d'administration pour sauvegarder et réentraîner 
-├── README.md 	     		# Fichier de documentation du projet 
+ ├──adm.html 		     # Interface d'administration pour sauvegarder et réentraîner 
+├── README.md 	     # Fichier de documentation du projet 
 ├── requirements.txt 	# Fichier pour lister les dépendances Python 
 ├── .gitignore 	     	# Fichier pour exclure certains fichiers du versioning
 ```
