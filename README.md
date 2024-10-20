@@ -21,7 +21,6 @@ projet7-op/
 ├── notebooks/          # Dossier pour les notebooks Jupyter
 ├── models/             # Dossier pour stocker les modèles entraînés
 ├── mlruns/             # Dossier pour les enregistrements MLFlow
-├── tests/              # Dossier pour les tests unitaires
 ├── README.md           # Fichier de documentation du projet
 ├── requirements.txt    # Fichier pour lister les dépendances Python
 ├── .gitignore          # Fichier pour exclure certains fichiers du versioning
