@@ -19,7 +19,6 @@ La structure du projet est organisée de manière à faciliter le développement
 projet7-op/
 ├── data/               # Dossier pour les jeux de données
 ├── notebooks/          # Dossier pour les notebooks Jupyter
-├── scripts/            # Dossier pour les scripts Python
 ├── models/             # Dossier pour stocker les modèles entraînés
 ├── mlruns/             # Dossier pour les enregistrements MLFlow
 ├── tests/              # Dossier pour les tests unitaires
