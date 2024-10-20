@@ -32,7 +32,7 @@ projet7-op/
 ├── README.md 	     		# Fichier de documentation du projet 
 ├── requirements.txt 	# Fichier pour lister les dépendances Python 
 ├── .gitignore 	     	# Fichier pour exclure certains fichiers du versioning
-
+```
 
 ## Explication de l'API
 
@@ -60,19 +60,20 @@ Azure Insights est utilisé pour suivre les métriques suivantes :
    Exécuter la commande suivante pour installer les packages nécessaires :
    ```bash
    pip install -r requirements.txt
+   ```
 ## Instructions d'installation et d'exécution
 
 1. **Lancer l'API en local** :
    ```bash
    python api/main.py
-
+   ```
 2. **Accéder aux interfaces :**
 
 ```plaintext
 Page de prédiction : http://localhost:5000/predict
 Page de test : http://localhost:5000/test
 Page d'administration : http://localhost:5000/adm
-
+```
 ## Modèle utilisé
 
 Le projet utilise plusieurs modèles, y compris :
