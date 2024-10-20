@@ -133,11 +133,11 @@
             })
             .then(response => response.json())
             .then(data => {
-                // Afficher le message de retour de l'API
+                // Afficher le message reçu de l'API, ou un message d'erreur s'il est manquant
                 if (data.message) {
-                    alert(data.message);  // Message de confirmation correct
+                    alert(data.message);
                 } else {
-                    alert("Une erreur s'est produite.");
+                    alert("Erreur: aucune réponse reçue du serveur.");
                 }
                 document.getElementById('confirmationSection').style.display = 'none';
                 loadMessageHistory();  // Recharger l'historique des messages

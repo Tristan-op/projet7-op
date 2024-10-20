@@ -114,6 +114,8 @@ def confirm_sentiment():
         tc.track_metric('CorrectPredictionPercentage', correct_percentage)
 
         tc.flush()
+
+        # Assurer que la réponse renvoie toujours un message
         return jsonify({'message': 'Merci pour la confirmation' if confirmation else 'Merci pour la correction'}), 200
 
     except Exception as e:
