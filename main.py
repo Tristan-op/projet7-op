@@ -35,7 +35,7 @@ correct_predictions = 0
 
 # Simuler deux bases de données en mémoire avec des listes
 tweets = []  # Pour la page predict.html (tweets réels)
-tweets_test = []  # Pour les tests sur la page chat.html (tweets de test)
+tweets_test = []  # Pour les tests sur la page test.html (tweets de test)
 
 # Page d'accueil avec redirection vers predict.html
 @app.route('/')
@@ -79,7 +79,7 @@ def predict_only():
     except Exception as e:
         return jsonify({'error': 'Erreur lors de la prédiction'}), 500
 
-# Page des tests avec confirmation (chat.html)
+# Page des tests avec confirmation (test.html)
 @app.route('/send-message', methods=['POST'])
 def send_message():
     try:
@@ -120,9 +120,9 @@ def send_message():
 def admin_view():
     return render_template("adm.html", tweets=tweets, tweets_test=tweets_test)
 
-# Route pour afficher l'historique des messages de chat
-@app.route('/chat-history', methods=['GET'])
-def chat_history():
+# Route pour afficher l'historique des messages de test
+@app.route('/test-history', methods=['GET'])
+def test_history():
     return jsonify({'messages': tweets_test})
 
 # Confirmation du sentiment
