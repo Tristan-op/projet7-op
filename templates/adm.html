@@ -3,37 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administration des messages</title>
+    <title>Administration des Tweets</title>
 </head>
 <body>
-    <h1>Administration des messages</h1>
+    <h1>Administration des Tweets</h1>
 
-    <!-- Affichage de l'historique des messages -->
-    <h2>Historique des messages</h2>
+    <!-- Historique des tweets réels -->
+    <h2>Historique des tweets réels</h2>
     <table border="1">
         <thead>
             <tr>
                 <th>Nom d'utilisateur</th>
-                <th>Message</th>
+                <th>Tweet</th>
                 <th>Sentiment</th>
-                <th>Prédiction</th>
                 <th>Heure</th>
             </tr>
         </thead>
-        <tbody id="messageHistory">
-            {% for msg in messages[::-1] %}
+        <tbody>
+            {% for tweet in tweets %}
             <tr>
-                <td>{{ msg.username }}</td>
-                <td>{{ msg.message }}</td>
-                <td>
-                    {% if msg.sentiment == "Confirmé" %}
-                        L'utilisateur a confirmé le sentiment {{ msg.predicted_sentiment | lower }}
-                    {% elif msg.sentiment == "Corrigé" %}
-                        L'utilisateur a corrigé le sentiment en {{ msg.predicted_sentiment | lower }}
-                    {% endif %}
-                </td>
-                <td>{{ msg.predicted_sentiment }}</td>
-                <td>{{ msg.time }}</td>
+                <td>{{ tweet['username'] }}</td>
+                <td>{{ tweet['message'] }}</td>
+                <td>{{ tweet['sentiment'] }}</td>
+                <td>{{ tweet['time'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Historique des tweets de test -->
+    <h2>Historique des tweets de test</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Nom d'utilisateur</th>
+                <th>Tweet</th>
+                <th>Sentiment prédit</th>
+                <th>Validation</th>
+                <th>Heure</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tweet in tweets_test %}
+            <tr>
+                <td>{{ tweet['username'] }}</td>
+                <td>{{ tweet['message'] }}</td>
+                <td>{{ tweet['predicted_sentiment'] }}</td>
+                <td>{{ tweet['sentiment'] }}</td>
+                <td>{{ tweet['time'] }}</td>
             </tr>
             {% endfor %}
         </tbody>

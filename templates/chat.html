@@ -67,7 +67,7 @@
 
                 // Sentiment
                 const sentimentCell = document.createElement('td');
-                if (msg.sentiment.includes('confirmé')) {
+                if (msg.sentiment && msg.sentiment.includes('confirmé')) {
                     sentimentCell.textContent = `L'utilisateur a confirmé que le sentiment est ${msg.predicted_sentiment.toLowerCase()}`;
                 } else {
                     sentimentCell.textContent = `L'utilisateur n'est pas d'accord avec la prédiction`;

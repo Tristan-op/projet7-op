@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prédiction de Sentiment</title>
+</head>
+<body>
+    <h1>Prédiction de Sentiment</h1>
+
+    <!-- Formulaire d'envoi de tweet -->
+    <form id="predictForm">
+        <label for="username">Nom d'utilisateur:</label>
+        <input type="text" id="username" name="username" required>
+
+        <label for="tweet">Entrez un tweet :</label>
+        <textarea id="tweet" name="tweet" required></textarea>
+
+        <button type="submit">Envoyer</button>
+    </form>
+
+    <!-- Résultat de la prédiction -->
+    <h2>Résultat de la Prédiction</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Nom d'utilisateur</th>
+                <th>Tweet</th>
+                <th>Prédiction</th>
+                <th>Heure</th>
+            </tr>
+        </thead>
+        <tbody id="predictionResult">
+            <!-- Les résultats de la prédiction seront insérés ici via JavaScript -->
+        </tbody>
+    </table>
+
+    <script>
+        // Soumission du formulaire pour envoyer un tweet et obtenir une prédiction
+        document.getElementById('predictForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const tweet = document.getElementById('tweet').value;
+
+            fetch('/predict-only', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, tweet })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const predictionResult = document.getElementById('predictionResult');
+                const row = document.createElement('tr');
+
+                // Nom d'utilisateur
+                const usernameCell = document.createElement('td');
+                usernameCell.textContent = username;
+                row.appendChild(usernameCell);
+
+                // Tweet
+                const tweetCell = document.createElement('td');
+                tweetCell.textContent = tweet;
+                row.appendChild(tweetCell);
+
+                // Prédiction
+                const sentimentCell = document.createElement('td');
+                sentimentCell.textContent = data.sentiment;
+                row.appendChild(sentimentCell);
+
+                // Heure
+                const timeCell = document.createElement('td');
+                const currentTime = new Date().toLocaleString(); // Obtenir l'heure actuelle
+                timeCell.textContent = currentTime;
+                row.appendChild(timeCell);
+
+                // Ajouter la ligne à la table
+                predictionResult.appendChild(row);
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        });
+    </script>
+</body>
+</html>

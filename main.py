@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect
 import pickle
 from sklearn.feature_extraction.text import CountVectorizer
 import spacy
@@ -29,29 +29,57 @@ def preprocess_text(text):
 # Initialisation de TelemetryClient pour Application Insights
 tc = TelemetryClient('9ea1ad3d-2949-4e6f-a84b-4555cb14bd23')
 
-# Variables pour suivre le nombre total de prédictions et celles qui sont correctes
+# Variables pour suivre les prédictions correctes
 total_predictions = 0
 correct_predictions = 0
 
-# Simuler une base de données en mémoire pour stocker les messages
-messages = []
+# Simuler deux bases de données en mémoire avec des listes
+tweets = []  # Pour la page predict.html (tweets réels)
+tweets_test = []  # Pour les tests sur la page chat.html (tweets de test)
 
+# Page d'accueil avec redirection vers predict.html
 @app.route('/')
 def home():
     return render_template("welcome.html")
 
-@app.route('/chat')
-def chat():
-    return render_template("chat.html", messages=messages)
+@app.route('/redirect-predict', methods=['POST'])
+def redirect_to_predict():
+    return redirect('/predict')
 
-@app.route('/adm')
-def admin_view():
-    return render_template("adm.html", messages=messages)
+# Page de prédiction (predict.html)
+@app.route('/predict-only', methods=['POST'])
+def predict_only():
+    try:
+        data = request.get_json()
+        tweet = data['tweet']
 
-@app.route('/chat-history', methods=['GET'])
-def chat_history():
-    return jsonify({'messages': messages})
+        # Prétraitement du tweet
+        preprocessed_tweet = preprocess_text(tweet)
 
+        # Vectorisation du tweet
+        tweet_vect = count_vectorizer.transform([preprocessed_tweet])
+
+        # Prédiction du modèle
+        prediction = model.predict(tweet_vect)
+        predicted_sentiment = 'Positif' if prediction[0] > 0.5 else 'Négatif'
+
+        # Sauvegarder dans la liste de tweets (sans confirmation)
+        tweets.append({
+            'username': data.get('username', 'Utilisateur'),  # Si un nom d'utilisateur est fourni
+            'message': tweet,
+            'sentiment': predicted_sentiment,
+            'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
+
+        # Envoi à Azure Insights pour les prédictions positives/négatives
+        tc.track_event(f'Tweet_{predicted_sentiment}', {'tweet': tweet}, {'sentiment': 1 if predicted_sentiment == 'Positif' else 0})
+        tc.flush()
+
+        return jsonify({'sentiment': predicted_sentiment}), 200
+    except Exception as e:
+        return jsonify({'error': 'Erreur lors de la prédiction'}), 500
+
+# Page des tests avec confirmation (chat.html)
 @app.route('/send-message', methods=['POST'])
 def send_message():
     try:
@@ -67,19 +95,19 @@ def send_message():
 
         # Prédiction du modèle
         prediction = model.predict(message_vect)
-        predicted_sentiment = 1 if prediction[0] > 0.5 else 0
+        predicted_sentiment = 'Positif' if prediction[0] > 0.5 else 'Négatif'
 
-        # Générer la réponse de validation
-        response = f"S.A.R.A : Le modèle a prédit que votre message est {'positif' if predicted_sentiment == 1 else 'négatif'}. Êtes-vous d'accord ?"
-
-        # Stocker le message
-        messages.append({
+        # Sauvegarder toutes les colonnes dans la liste de tests (tweet_test)
+        tweets_test.append({
             'username': username,
             'message': message,
-            'predicted_sentiment': 'Positif' if predicted_sentiment == 1 else 'Négatif',
+            'predicted_sentiment': predicted_sentiment,
             'sentiment': None,  # À confirmer par l'utilisateur
             'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         })
+
+        # Générer la réponse de validation
+        response = f"S.A.R.A : Le modèle a prédit que votre message est {predicted_sentiment}. Êtes-vous d'accord ?"
 
         tc.flush()
         return jsonify({'result': response, 'prediction': predicted_sentiment}), 200
@@ -87,6 +115,17 @@ def send_message():
     except Exception as e:
         return jsonify({'result': 'Erreur lors de l\'envoi du message'}), 500
 
+# Page Admin (adm.html) pour afficher les deux listes de tweets
+@app.route('/adm')
+def admin_view():
+    return render_template("adm.html", tweets=tweets, tweets_test=tweets_test)
+
+# Route pour afficher l'historique des messages de chat
+@app.route('/chat-history', methods=['GET'])
+def chat_history():
+    return jsonify({'messages': tweets_test})
+
+# Confirmation du sentiment
 @app.route('/confirm-sentiment', methods=['POST'])
 def confirm_sentiment():
     global total_predictions, correct_predictions
@@ -97,12 +136,14 @@ def confirm_sentiment():
         confirmation = data['confirmation']
 
         # Ne pas modifier les anciens messages confirmés
-        for msg in messages:
+        for msg in tweets_test:
             if msg['username'] == username and msg['message'] == message and msg['sentiment'] is None:
                 if confirmation:
                     msg['sentiment'] = f"L'utilisateur a confirmé que le sentiment est {msg['predicted_sentiment'].lower()}"
                 else:
                     msg['sentiment'] = f"L'utilisateur n'est pas d'accord avec la prédiction"
+                    # Capture des erreurs de prédiction dans Azure Insights
+                    tc.track_event('IncorrectPrediction', {'username': username, 'message': message, 'predicted_sentiment': msg['predicted_sentiment']})
 
         # Traquer les événements corrects ou incorrects via Azure Insights
         total_predictions += 1
@@ -118,7 +159,6 @@ def confirm_sentiment():
 
         tc.flush()
 
-        # Retourner la réponse avec le message
         return jsonify({'message': 'Merci pour la confirmation' if confirmation else 'Merci pour la correction'}), 200
 
     except Exception as e:
