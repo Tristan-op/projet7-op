@@ -125,6 +125,10 @@ def admin_view():
 def test_history():
     return jsonify({'messages': tweets_test})
 
+@app.route('/test')
+def test_page():
+    return render_template("test.html", messages=tweets_test)
+
 # Confirmation du sentiment
 @app.route('/confirm-sentiment', methods=['POST'])
 def confirm_sentiment():
