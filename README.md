@@ -19,19 +19,19 @@ La structure du projet est organisée pour faciliter le développement, le dépl
 
 ```plaintext
 projet7-op/ 
-├── data/ 				# Dossier pour les jeux de données 
-├── notebooks/ 		# Dossier pour les notebooks Jupyter 
-├── models/ 			# Dossier pour stocker les modèles entraînés 
-├── mlruns/ 			# Dossier pour les enregistrements MLFlow 
-├── main.py 			# Fichier principal de l'API 
+├── data/ 			   	     # Dossier pour les jeux de données 
+├── notebooks/ 	     	# Dossier pour les notebooks Jupyter 
+├── models/ 			       # Dossier pour stocker les modèles entraînés 
+├── mlruns/ 		  	     # Dossier pour les enregistrements MLFlow 
+├── main.py 		       	# Fichier principal de l'API 
 ├──templates/ 
  ├── welcome.html 
  ├── predict.html 
- ├── test.html 		# Interface de test pour soumettre des tweets 
- ├──adm.html 			# Interface d'administration pour sauvegarder et réentraîner 
-├── README.md 			# Fichier de documentation du projet 
+ ├── test.html 	     	# Interface de test pour soumettre des tweets 
+ ├──adm.html 		      	# Interface d'administration pour sauvegarder et réentraîner 
+├── README.md 	     		# Fichier de documentation du projet 
 ├── requirements.txt 	# Fichier pour lister les dépendances Python 
-├── .gitignore 		# Fichier pour exclure certains fichiers du versioning
+├── .gitignore 	     	# Fichier pour exclure certains fichiers du versioning
 
 
 ## Explication de l'API
