@@ -133,12 +133,18 @@
             })
             .then(response => response.json())
             .then(data => {
-                alert(data.message);  // Message de confirmation
+                // Afficher le message de retour de l'API
+                if (data.message) {
+                    alert(data.message);  // Message de confirmation correct
+                } else {
+                    alert("Une erreur s'est produite.");
+                }
                 document.getElementById('confirmationSection').style.display = 'none';
-                loadMessageHistory();
+                loadMessageHistory();  // Recharger l'historique des messages
             })
             .catch(error => {
                 console.error('Erreur lors de la confirmation:', error);
+                alert("Une erreur s'est produite lors de la confirmation.");
             });
         }
 

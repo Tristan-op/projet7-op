@@ -20,6 +20,7 @@ nlp = spacy.load('./models/spacy_model')
 
 # Fonction de prétraitement du texte
 def preprocess_text(text):
+    """Prétraitement du texte : nettoyage et lemmatisation"""
     text = re.sub(r'[^\w\s]', '', text.lower())
     doc = nlp(text)
     lemmatized_words = [token.lemma_ for token in doc]
@@ -76,7 +77,7 @@ def send_message():
             'username': username,
             'message': message,
             'predicted_sentiment': 'Positif' if predicted_sentiment == 1 else 'Négatif',
-            'sentiment': None,
+            'sentiment': None,  # À confirmer par l'utilisateur
             'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         })
 
@@ -113,10 +114,10 @@ def confirm_sentiment():
         tc.track_metric('CorrectPredictionPercentage', correct_percentage)
 
         tc.flush()
-        return jsonify({'result': 'Merci pour la confirmation' if confirmation else 'Merci pour la correction'}), 200
+        return jsonify({'message': 'Merci pour la confirmation' if confirmation else 'Merci pour la correction'}), 200
 
     except Exception as e:
-        return jsonify({'result': 'Erreur lors de la confirmation'}), 500
+        return jsonify({'message': 'Erreur lors de la confirmation'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
