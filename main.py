@@ -46,7 +46,11 @@ def home():
 def redirect_to_predict():
     return redirect('/predict')
 
-# Page de prédiction (.\predict.html)
+@app.route('/predict')
+def predict_page():
+    return render_template("predict.html")
+
+# Page de prédiction (predict.html)
 @app.route('/predict-only', methods=['POST'])
 def predict_only():
     try:
