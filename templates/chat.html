@@ -51,7 +51,8 @@
             const historyTable = document.getElementById('messageHistory');
             historyTable.innerHTML = ''; // Réinitialiser l'historique
 
-            messages.forEach(msg => {
+            // Inverser les messages pour les afficher du plus récent au plus ancien
+            messages.slice().reverse().forEach(msg => {
                 const row = document.createElement('tr');
 
                 // Nom d'utilisateur
@@ -64,14 +65,18 @@
                 messageCell.textContent = msg.message;
                 row.appendChild(messageCell);
 
-                // Sentiment confirmé
+                // Sentiment
                 const sentimentCell = document.createElement('td');
-                sentimentCell.textContent = msg.sentiment ? msg.sentiment : 'En attente';
+                if (msg.sentiment == "Confirmé") {
+                    sentimentCell.textContent = `L'utilisateur a confirmé le sentiment ${msg.predicted_sentiment.toLowerCase()}`;
+                } else if (msg.sentiment == "Corrigé") {
+                    sentimentCell.textContent = `L'utilisateur a corrigé le sentiment en ${msg.predicted_sentiment.toLowerCase()}`;
+                }
                 row.appendChild(sentimentCell);
 
                 // Prédiction
                 const predictedSentimentCell = document.createElement('td');
-                predictedSentimentCell.textContent = msg.predicted_sentiment ? msg.predicted_sentiment : '';
+                predictedSentimentCell.textContent = msg.predicted_sentiment;
                 row.appendChild(predictedSentimentCell);
 
                 // Heure
@@ -101,7 +106,7 @@
             .then(response => response.json())
             .then(data => {
                 currentTweet = { username, message, prediction: data.prediction };
-                document.getElementById('predictionText').textContent = data.result;
+                document.getElementById('predictionText').textContent = `S.A.R.A : Le modèle a prédit que votre message est ${data.prediction == 1 ? 'positif' : 'négatif'}. Êtes-vous d'accord ?`;
                 document.getElementById('confirmationSection').style.display = 'block';
             })
             .catch(error => {
@@ -128,7 +133,7 @@
             })
             .then(response => response.json())
             .then(data => {
-                alert(data.message);
+                alert(data.message);  // Message de confirmation
                 document.getElementById('confirmationSection').style.display = 'none';
                 loadMessageHistory();
             })

@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liste des messages</title>
+    <title>Administration des messages</title>
 </head>
 <body>
-    <h1>Liste des messages</h1>
+    <h1>Administration des messages</h1>
 
-    <!-- Table des messages -->
+    <!-- Affichage de l'historique des messages -->
+    <h2>Historique des messages</h2>
     <table border="1">
         <thead>
             <tr>
@@ -19,12 +20,18 @@
                 <th>Heure</th>
             </tr>
         </thead>
-        <tbody>
-            {% for msg in messages %}
+        <tbody id="messageHistory">
+            {% for msg in messages[::-1] %}
             <tr>
                 <td>{{ msg.username }}</td>
                 <td>{{ msg.message }}</td>
-                <td>{{ msg.sentiment }}</td>
+                <td>
+                    {% if msg.sentiment == "Confirmé" %}
+                        L'utilisateur a confirmé le sentiment {{ msg.predicted_sentiment | lower }}
+                    {% elif msg.sentiment == "Corrigé" %}
+                        L'utilisateur a corrigé le sentiment en {{ msg.predicted_sentiment | lower }}
+                    {% endif %}
+                </td>
                 <td>{{ msg.predicted_sentiment }}</td>
                 <td>{{ msg.time }}</td>
             </tr>
