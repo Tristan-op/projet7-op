@@ -42,7 +42,7 @@ tweets_test = []  # Pour les tests sur la page test.html (tweets de test)
 def home():
     return render_template("welcome.html")
 
-@app.route('/redirect-predict', methods=['POST'])
+@app.route('/redirect-predict', methods=['GET', 'POST'])
 def redirect_to_predict():
     return redirect('/predict')
 
