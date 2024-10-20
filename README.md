@@ -21,9 +21,9 @@ La structure du projet est organisée pour faciliter le développement, le dépl
 projet7-op/ 
 ├── data/               # Dossier pour les jeux de données 
 ├── notebooks/ 	     	# Dossier pour les notebooks Jupyter 
-├── models/ 			       # Dossier pour stocker les modèles entraînés 
-├── mlruns/ 		  	     # Dossier pour les enregistrements MLFlow 
-├── main.py           # Fichier principal de l'API 
+├── models/             # Dossier pour stocker les modèles entraînés 
+├── mlruns/             # Dossier pour les enregistrements MLFlow 
+├── main.py             # Fichier principal de l'API 
 ├──templates/ 
  ├── welcome.html 
  ├── predict.html 
