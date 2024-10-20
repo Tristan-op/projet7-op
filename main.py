@@ -96,10 +96,13 @@ def confirm_sentiment():
         message = data['message']
         confirmation = data['confirmation']
 
-        # Mettre à jour le sentiment avec la confirmation utilisateur
+        # Ne pas modifier les anciens messages confirmés
         for msg in messages:
-            if msg['username'] == username and msg['message'] == message:
-                msg['sentiment'] = 'Confirmé' if confirmation else 'Corrigé'
+            if msg['username'] == username and msg['message'] == message and msg['sentiment'] is None:
+                if confirmation:
+                    msg['sentiment'] = f"L'utilisateur a confirmé que le sentiment est {msg['predicted_sentiment'].lower()}"
+                else:
+                    msg['sentiment'] = f"L'utilisateur n'est pas d'accord avec la prédiction"
 
         # Traquer les événements corrects ou incorrects via Azure Insights
         total_predictions += 1
@@ -115,7 +118,7 @@ def confirm_sentiment():
 
         tc.flush()
 
-        # Assurer que la réponse renvoie toujours un message
+        # Retourner la réponse avec le message
         return jsonify({'message': 'Merci pour la confirmation' if confirmation else 'Merci pour la correction'}), 200
 
     except Exception as e:
