@@ -7,6 +7,8 @@
 </head>
 <body>
     <h1>Liste des messages</h1>
+
+    <!-- Table des messages -->
     <table border="1">
         <thead>
             <tr>
@@ -29,5 +31,23 @@
             {% endfor %}
         </tbody>
     </table>
+
+    <!-- Boutons supplémentaires -->
+    <div>
+        <button id="saveDatabaseBtn">Sauvegarder dans la base de données</button>
+        <button id="retrainModelBtn">Réentraînement du modèle</button>
+    </div>
+
+    <script>
+        // Fonction pour avertir l'utilisateur lors de la sauvegarde
+        document.getElementById("saveDatabaseBtn").addEventListener("click", function() {
+            alert("Implémentation de la base de données en cours...");
+        });
+
+        // Fonction pour avertir l'utilisateur lors du réentraînement du modèle
+        document.getElementById("retrainModelBtn").addEventListener("click", function() {
+            alert("Réentraînement du modèle non encore implémenté...");
+        });
+    </script>
 </body>
 </html>

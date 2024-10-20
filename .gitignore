@@ -21,3 +21,6 @@ notebooks/.ipynb_checkpoints/Untitled-checkpoint.ipynb
 /notebooks/modèle_simple
 /notebooks/modèle_avancé
 /notebooks/modèle_bert
+venv/Scripts/pip.exe
+/venv
+/notebooks/modele_BERT/matrice

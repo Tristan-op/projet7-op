@@ -16,11 +16,15 @@
         <label for="message">Message:</label>
         <textarea id="message" name="message" required></textarea>
 
-        <label for="sentiment">Sentiment (0 = Négatif, 1 = Positif):</label>
-        <input type="number" id="sentiment" name="sentiment" min="0" max="1" required>
-
         <button type="submit">Envoyer</button>
     </form>
+
+    <!-- Confirmation du sentiment -->
+    <div id="confirmationSection" style="display:none;">
+        <p id="predictionText"></p>
+        <button id="confirmYes">Oui</button>
+        <button id="confirmNo">Non</button>
+    </div>
 
     <!-- Affichage de l'historique des messages -->
     <h2>Historique des messages</h2>
@@ -40,6 +44,8 @@
     </table>
 
     <script>
+        let currentTweet = {};
+
         // Fonction pour mettre à jour l'historique des messages
         function updateMessageHistory(messages) {
             const historyTable = document.getElementById('messageHistory');
@@ -58,14 +64,14 @@
                 messageCell.textContent = msg.message;
                 row.appendChild(messageCell);
 
-                // Sentiment
+                // Sentiment confirmé
                 const sentimentCell = document.createElement('td');
-                sentimentCell.textContent = msg.sentiment ? (msg.sentiment == 'Positif' ? 'Positif' : 'Négatif') : '';
+                sentimentCell.textContent = msg.sentiment ? msg.sentiment : 'En attente';
                 row.appendChild(sentimentCell);
 
                 // Prédiction
                 const predictedSentimentCell = document.createElement('td');
-                predictedSentimentCell.textContent = msg.predicted_sentiment ? (msg.predicted_sentiment == 'Positif' ? 'Positif' : 'Négatif') : '';
+                predictedSentimentCell.textContent = msg.predicted_sentiment ? msg.predicted_sentiment : '';
                 row.appendChild(predictedSentimentCell);
 
                 // Heure
@@ -84,25 +90,52 @@
 
             const username = document.getElementById('username').value;
             const message = document.getElementById('message').value;
-            const sentiment = document.getElementById('sentiment').value;
 
             fetch('/send-message', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ username, message, sentiment })
+                body: JSON.stringify({ username, message })
             })
             .then(response => response.json())
             .then(data => {
-                alert(data.result);
-                // Appeler une fonction pour mettre à jour l'historique après l'envoi du message
-                loadMessageHistory();
+                currentTweet = { username, message, prediction: data.prediction };
+                document.getElementById('predictionText').textContent = data.result;
+                document.getElementById('confirmationSection').style.display = 'block';
             })
             .catch(error => {
                 console.error('Erreur:', error);
             });
         });
+
+        // Gérer la confirmation de l'utilisateur
+        document.getElementById('confirmYes').addEventListener('click', function() {
+            sendConfirmation(true);
+        });
+
+        document.getElementById('confirmNo').addEventListener('click', function() {
+            sendConfirmation(false);
+        });
+
+        function sendConfirmation(confirmation) {
+            fetch('/confirm-sentiment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ ...currentTweet, confirmation })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                document.getElementById('confirmationSection').style.display = 'none';
+                loadMessageHistory();
+            })
+            .catch(error => {
+                console.error('Erreur lors de la confirmation:', error);
+            });
+        }
 
         // Fonction pour charger l'historique des messages
         function loadMessageHistory() {

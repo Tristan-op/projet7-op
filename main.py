@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, jsonify
 import pickle
 from sklearn.feature_extraction.text import CountVectorizer
 import spacy
-import spacy.cli  # Bibliothèque pour la lemmatisation
 import re
 from datetime import datetime
 from applicationinsights import TelemetryClient  # Import Azure Insights SDK
@@ -20,12 +19,11 @@ with open(model_path, 'rb') as f:
 # Charger le modèle Spacy
 def load_spacy_model():
     try:
-        # Charger le modèle Spacy depuis le disque
         nlp = spacy.load('./models/spacy_model')
         print("Modèle Spacy chargé depuis ./models/spacy_model")
     except Exception as e:
         print(f"Erreur lors du chargement du modèle Spacy : {e}")
-        raise e  # Relancer l'erreur pour gérer cela dans l'appelant
+        raise e
     return nlp
 
 nlp = load_spacy_model()
@@ -50,7 +48,6 @@ def home():
 
 @app.route('/chat')
 def chat():
-    # Passer les messages à la page chat
     return render_template("chat.html", messages=messages)
 
 @app.route('/chat-history', methods=['GET'])
@@ -63,72 +60,68 @@ def send_message():
         data = request.get_json()
 
         # Vérifier que les champs nécessaires sont présents
-        if 'username' not in data or 'message' not in data or 'sentiment' not in data:
+        if 'username' not in data or 'message' not in data:
             return jsonify({'result': 'Données invalides, certains champs manquent'}), 400
 
         username = data['username']
         message = data['message']
-        sentiment = int(data['sentiment'])  # Le sentiment doit être un entier (0 ou 1)
 
         # Prétraitement du message avec la lemmatisation
         preprocessed_message = preprocess_text(message)
 
-        # Vectorisation du message avec le CountVectorizer ajusté
+        # Vectorisation du message
         message_vect = count_vectorizer.transform([preprocessed_message])
 
-        # Faire la prédiction avec le modèle de régression logistique
+        # Prédiction du modèle de régression
         prediction = model.predict(message_vect)
-        predicted_sentiment = 1 if prediction[0] > 0.5 else 0  # Si la prédiction est supérieure à 0.5, c'est "Positif"
+        predicted_sentiment = 1 if prediction[0] > 0.5 else 0
 
-        # Comparer le sentiment prédit avec le sentiment fourni
-        if predicted_sentiment == sentiment:
-            response = "J'ai bien compris tes sentiments."
-            tc.track_event('CorrectPrediction', {'username': username, 'message': message}, {'sentiment': sentiment, 'predicted_sentiment': predicted_sentiment})
-        else:
-            response = "Désolé, je n'ai pas bien compris tes sentiments."
-            tc.track_event('IncorrectPrediction', {'username': username, 'message': message}, {'sentiment': sentiment, 'predicted_sentiment': predicted_sentiment})
-
-        # Incrémentation des prédictions correctes ou incorrectes
-        if predicted_sentiment == sentiment:
-            tc.track_metric('CorrectPredictions', 1)
-        else:
-            tc.track_metric('IncorrectPredictions', 1)
+        # Demander à l'utilisateur de valider la prédiction
+        response = f"Le modèle a prédit que votre message est {'positif' if predicted_sentiment == 1 else 'négatif'}. Êtes-vous d'accord ?"
 
         # Stocker le message de l'utilisateur dans une base de données simulée
         messages.append({
             'username': username,
             'message': message,
-            'sentiment': 'Positif' if sentiment == 1 else 'Négatif',  # Sentiment donné par l'utilisateur
-            'predicted_sentiment': 'Positif' if predicted_sentiment == 1 else 'Négatif',  # Prédiction du modèle
+            'predicted_sentiment': 'Positif' if predicted_sentiment == 1 else 'Négatif',
+            'sentiment': None,  # À confirmer par l'utilisateur
             'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         })
 
-        # Stocker également la réponse du modèle avec le nom "S.A.R.A"
-        messages.append({
-            'username': 'S.A.R.A',
-            'message': response,
-            'sentiment': '',
-            'predicted_sentiment': '',
-            'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        })
-
-        # Envoyer les données à Azure Application Insights
         tc.flush()
-
-        return jsonify({'result': response}), 200
+        return jsonify({'result': response, 'prediction': predicted_sentiment}), 200
 
     except Exception as e:
         print(f"Erreur lors de l'envoi du message : {e}")
         return jsonify({'result': 'Erreur lors de l\'envoi du message'}), 500
 
-@app.route('/adm')
-def admin_view():
-    # Passer les messages à la page d'administration
-    return render_template("adm.html", messages=messages)
+@app.route('/confirm-sentiment', methods=['POST'])
+def confirm_sentiment():
+    try:
+        data = request.get_json()
+        username = data['username']
+        message = data['message']
+        confirmation = data['confirmation']
 
-@app.route('/exit')
-def exit_app():
-    return "Merci d'avoir utilisé l'application. L'application est maintenant fermée."
+        # Mettre à jour le sentiment avec la confirmation utilisateur
+        for msg in messages:
+            if msg['username'] == username and msg['message'] == message:
+                msg['sentiment'] = 'Confirmé' if confirmation else 'Corrigé'
+
+        # Traquer les événements corrects ou incorrects via Azure Insights
+        if confirmation:
+            tc.track_event('CorrectPrediction', {'username': username, 'message': message})
+            tc.track_metric('CorrectPredictions', 1)
+        else:
+            tc.track_event('IncorrectPrediction', {'username': username, 'message': message})
+            tc.track_metric('IncorrectPredictions', 1)
+
+        tc.flush()
+        return jsonify({'result': 'Merci pour la confirmation' if confirmation else 'Merci pour la correction'}), 200
+
+    except Exception as e:
+        print(f"Erreur lors de la confirmation : {e}")
+        return jsonify({'result': 'Erreur lors de la confirmation'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
