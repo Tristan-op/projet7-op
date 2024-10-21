@@ -75,13 +75,12 @@ def predict_only():
             'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         })
 
-	# Envoi à Azure Insights pour les prédictions positives/négatives
-	if predicted_sentiment == 'Négatif':
-    		tc.track_event('Tweet_Négatif', {'tweet': tweet}, {'sentiment': 0})
-	else:
-   		 tc.track_event('Tweet_Positif', {'tweet': tweet}, {'sentiment': 1})
-	tc.flush()
-    
+        # Envoi à Azure Insights pour les prédictions positives/négatives
+        if predicted_sentiment == 'Négatif':
+            tc.track_event('Tweet_Négatif', {'tweet': tweet}, {'sentiment': 0})
+        else:
+            tc.track_event('Tweet_Positif', {'tweet': tweet}, {'sentiment': 1})
+        tc.flush()
 
         return jsonify({'sentiment': predicted_sentiment}), 200
     except Exception as e:
